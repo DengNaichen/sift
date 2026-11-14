@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-APP_NAME="Mailroom"
+APP_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleName' "${ROOT_DIR}/Config/Info.plist")"
 BUNDLE_ID="dev.mailroom.deck"
 DIST_DIR="${ROOT_DIR}/dist"
 APP_BUNDLE="${DIST_DIR}/${APP_NAME}.app"

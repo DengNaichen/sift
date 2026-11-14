@@ -1,6 +1,6 @@
-# Mailroom Deck
+# Sift
 
-100% 纯原生 Swift / SwiftUI 实现的 macOS 三栏个人邮件分拣工作台，直接双向对接系统「邮件（Apple Mail）」。
+Sift 是 100% 纯原生 Swift / SwiftUI 实现的 macOS 三栏个人邮件分拣工作台，直接双向对接系统「邮件（Apple Mail）」。
 
 ## 快速启动
 
@@ -13,18 +13,18 @@ swift test
 swift run MailroomApp
 ```
 
-### 方式 2：打包独立 `Mailroom.app`（支持 Xcode 签名与独立权限管理）
+### 方式 2：打包独立 `Sift.app`（支持 Xcode 签名与独立权限管理）
 
 ```bash
 ./scripts/build-app.sh
-open dist/Mailroom.app
+open dist/Sift.app
 ```
 
 打包需要支持 Icon Composer 的完整 Xcode（26 或更新版本）。脚本会将 [Sift 图标源资产](Resources/Brand/README.md) 编译为原生图标资源并写入应用包；更新图标预览使用 `./scripts/export-app-icon.sh`。
 
 首次运行独立 `.app` 时：
-1. 若尚未授予磁盘权限，应用会自动以内置演示数据启动，并在顶部显示引导条，点击 **「打开系统设置」** 在「隐私与安全性 → 完全磁盘访问权限」中勾选 `Mailroom.app`，随后点 **「重新连接」** 即可切换至真实邮箱。
-2. 首次按下 `Space`（归档）、`⇧K`（插旗保留）或 `⌫`（移入废纸篓）时，系统会弹出一次「允许 Mailroom 控制“邮件”」授权框，点允许即可。
+1. 若尚未授予磁盘权限，应用会自动以内置演示数据启动，并在顶部显示引导条，点击 **「打开系统设置」** 在「隐私与安全性 → 完全磁盘访问权限」中勾选 `Sift.app`，随后点 **「重新连接」** 即可切换至真实邮箱。
+2. 首次按下 `Space`（归档）、`⇧K`（插旗保留）或 `⌫`（移入废纸篓）时，系统会弹出一次「允许 Sift 控制“邮件”」授权框，点允许即可。
 
 *(提示：也可以直接用 Xcode 打开根目录 `Package.swift`，配置你的开发团队签名后按 `⌘R` 运行，开发期反复编译不会丢失 TCC 权限。)*
 

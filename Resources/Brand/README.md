@@ -28,6 +28,6 @@
 ./scripts/build-app.sh
 ```
 
-打包脚本使用 `actool` 从 `Sift.icon` 生成 `Assets.car`、`Sift.icns` 和图标 Info.plist 字段，再放入 `dist/Mailroom.app`。生成文件保存在已忽略的 `dist/` 内；源文件和预览纳入版本控制。`Sift.icns` 是较旧 macOS 的兼容资源，支持新图标格式的系统可使用编译后的图层资源。
+打包脚本使用 `actool` 从 `Sift.icon` 生成 `Assets.car`、`Sift.icns` 和图标 Info.plist 字段，再放入 `dist/Sift.app`。生成文件保存在已忽略的 `dist/` 内；源文件和预览纳入版本控制。`Sift.icns` 是较旧 macOS 的兼容资源，支持新图标格式的系统可使用编译后的图层资源。
 
 该图标接入的是 `.app` 打包流程。`swift run MailroomApp` 不创建带图标元数据的应用包。

@@ -16,7 +16,7 @@ struct SidebarView: View {
             // 1. 品牌栏
             HStack(spacing: 9) {
                 FluidSilkLogoIcon()
-                Text("Mailroom")
+                Text("Sift")
                     .font(.system(size: 13.5, weight: .semibold))
                     .foregroundStyle(p.ink)
 
