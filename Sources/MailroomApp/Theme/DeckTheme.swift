@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import Metal
 import MetalKit
@@ -663,5 +664,35 @@ extension View {
         } else {
             self
         }
+    }
+}
+
+// MARK: - Window Behind-Window Sidebar Vibrancy
+
+private final class BehindWindowVisualEffectView: NSVisualEffectView {
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        guard let window else { return }
+        window.isOpaque = false
+        window.backgroundColor = .clear
+    }
+}
+
+/// 窗口级桌面透光底板：让左侧 206pt 侧边栏微微透出桌面壁纸冷暖环境光，与右侧 100% 实心纸张工作台形成“左虚右实”层次。
+struct WindowSidebarBackdrop: NSViewRepresentable {
+    let mode: ThemeMode
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = BehindWindowVisualEffectView()
+        view.blendingMode = .behindWindow
+        view.material = .sidebar
+        view.state = .followsWindowActiveState
+        view.isEmphasized = false
+        view.appearance = NSAppearance(named: mode == .dark ? .darkAqua : .aqua)
+        return view
+    }
+
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.appearance = NSAppearance(named: mode == .dark ? .darkAqua : .aqua)
     }
 }

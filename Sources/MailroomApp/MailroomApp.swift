@@ -64,19 +64,35 @@ struct RootDeckView: View {
     @Environment(\.palette) private var p
     let vm: DeckViewModel
     @State private var keyMonitorInstalled = false
+    @State private var isPeekingSidebar = false
+    @State private var isHoveringLeftEdge = false
+    @State private var isHoveringPeekDrawer = false
+    @State private var peekShowTask: Task<Void, Never>?
+    @State private var peekHideTask: Task<Void, Never>?
 
     private var showLeftSidebar: Bool {
         vm.settingsOpen || !vm.sidebarCollapsed
     }
 
+    private var canPeekSidebar: Bool {
+        vm.sidebarCollapsed && !vm.settingsOpen && !vm.paletteOpen
+    }
+
     var body: some View {
         ZStack(alignment: .top) {
+            // 窗口底层桌面壁纸漫反射透光材质（左虚右实：左侧导航透出环境光，右侧工作台保持 100% 实心纸张）
+            ZStack {
+                WindowSidebarBackdrop(mode: p.mode)
+                p.canvas.opacity(p.mode == .dark ? 0.24 : 0.18)
+            }
+            .ignoresSafeArea()
+
             HStack(alignment: .top, spacing: 0) {
                 Group {
                     if vm.settingsOpen {
                         SettingsSidebarView(vm: vm)
                     } else {
-                        SidebarView(vm: vm)
+                        SidebarView(vm: vm, presentation: .docked)
                     }
                 }
                 .padding(.top, 6)
@@ -113,7 +129,9 @@ struct RootDeckView: View {
                 .padding(.leading, showLeftSidebar ? 0 : 6)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(p.canvas.ignoresSafeArea())
+            .overlay(alignment: .topLeading) {
+                peekSidebarOverlay
+            }
 
             if let noticeURL = vm.nativeNoticeURL {
                 NativeNoticeBanner(url: noticeURL)
@@ -128,10 +146,110 @@ struct RootDeckView: View {
                 .transition(.opacity)
             }
         }
+        .onChange(of: vm.sidebarCollapsed) { _, collapsed in
+            if !collapsed {
+                dismissPeekImmediately()
+            }
+        }
+        .onChange(of: vm.settingsOpen) { _, open in
+            if open {
+                dismissPeekImmediately()
+            }
+        }
+        .onChange(of: vm.paletteOpen) { _, open in
+            if open {
+                dismissPeekImmediately()
+            }
+        }
         .onAppear {
             guard !keyMonitorInstalled else { return }
             keyMonitorInstalled = true
             installKeyboardShortcuts()
+        }
+    }
+
+    @ViewBuilder
+    private var peekSidebarOverlay: some View {
+        ZStack(alignment: .topLeading) {
+            if canPeekSidebar {
+                Color.clear
+                    .frame(width: 9)
+                    .frame(maxHeight: .infinity)
+                    .contentShape(Rectangle())
+                    .onHover { hovering in
+                        onLeftEdgeHoverChanged(hovering)
+                    }
+                    .padding(.top, 48)
+            }
+
+            if isPeekingSidebar && canPeekSidebar {
+                SidebarView(
+                    vm: vm,
+                    presentation: .floatingPeek {
+                        dismissPeekImmediately()
+                    }
+                )
+                .deckGlassRect(cornerRadius: 16)
+                .shadow(color: .black.opacity(p.mode == .dark ? 0.36 : 0.12), radius: 22, x: 4, y: 8)
+                .onHover { hovering in
+                    onPeekDrawerHoverChanged(hovering)
+                }
+                .padding(.leading, 10)
+                .padding(.top, 38)
+                .padding(.bottom, 12)
+                .transition(.move(edge: .leading).combined(with: .opacity))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private func onLeftEdgeHoverChanged(_ hovering: Bool) {
+        isHoveringLeftEdge = hovering
+        if hovering {
+            peekHideTask?.cancel()
+            guard canPeekSidebar, !isPeekingSidebar else { return }
+            peekShowTask?.cancel()
+            peekShowTask = Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(80))
+                guard !Task.isCancelled, isHoveringLeftEdge, canPeekSidebar else { return }
+                withAnimation(.spring(response: 0.26, dampingFraction: 0.84)) {
+                    isPeekingSidebar = true
+                }
+            }
+        } else {
+            peekShowTask?.cancel()
+            schedulePeekDismissIfNeeded()
+        }
+    }
+
+    private func onPeekDrawerHoverChanged(_ hovering: Bool) {
+        isHoveringPeekDrawer = hovering
+        if hovering {
+            peekHideTask?.cancel()
+        } else {
+            schedulePeekDismissIfNeeded()
+        }
+    }
+
+    private func schedulePeekDismissIfNeeded() {
+        guard !isHoveringLeftEdge, !isHoveringPeekDrawer else { return }
+        peekHideTask?.cancel()
+        peekHideTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(160))
+            guard !Task.isCancelled, !isHoveringLeftEdge, !isHoveringPeekDrawer else { return }
+            withAnimation(.spring(response: 0.24, dampingFraction: 0.88)) {
+                isPeekingSidebar = false
+            }
+        }
+    }
+
+    private func dismissPeekImmediately() {
+        peekShowTask?.cancel()
+        peekHideTask?.cancel()
+        isHoveringLeftEdge = false
+        isHoveringPeekDrawer = false
+        withAnimation(.snappy(duration: 0.18)) {
+            isPeekingSidebar = false
         }
     }
 
@@ -195,6 +313,11 @@ struct RootDeckView: View {
 
             // 方向键与删除/回车
             switch keyCode {
+            case 53: // Escape
+                if isPeekingSidebar {
+                    dismissPeekImmediately()
+                    return nil
+                }
             case 125: // DownArrow
                 vm.moveFocus(delta: 1)
                 return nil

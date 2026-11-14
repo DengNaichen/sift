@@ -1,9 +1,29 @@
 import SwiftUI
 import MailroomCore
 
+enum SidebarPresentation {
+    case docked
+    case floatingPeek(onDismiss: () -> Void)
+
+    var isFloatingPeek: Bool {
+        if case .floatingPeek = self { return true }
+        return false
+    }
+
+    var dismissAction: (() -> Void)? {
+        if case .floatingPeek(let onDismiss) = self { return onDismiss }
+        return nil
+    }
+}
+
 struct SidebarView: View {
     @Environment(\.palette) private var p
     let vm: DeckViewModel
+    var presentation: SidebarPresentation = .docked
+
+    @State private var searchHovered = false
+    @State private var toggleHovered = false
+    @Namespace private var accountScopeNS
 
     private var triageFolders: [FolderDef] {
         FolderDef.all.filter { $0.group == .triage }
@@ -24,86 +44,90 @@ struct SidebarView: View {
 
                 Spacer()
 
-                Button {
-                    vm.toggleSidebar()
-                } label: {
-                    Image(systemName: "sidebar.left")
-                        .font(.system(size: 12.5, weight: .medium))
-                        .foregroundStyle(p.ink3)
-                        .frame(width: 24, height: 24)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help("收起侧边栏（[）")
+                sidebarToggleButton
             }
             .frame(height: 32)
             .padding(.horizontal, 4)
 
-            // 2. 多邮箱范围滤镜（支持 2–N 个真实邮箱横向自适应切换）
+            // 2. 多邮箱范围滤镜（无框横向流 + 滑动液态玻璃选中胶囊 + 右缘柔和渐隐）
             if vm.accounts.count > 1 {
-                VStack(alignment: .leading, spacing: 4) {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 2) {
-                            AccountScopeTab(
-                                label: "全部",
-                                dotColor: nil,
-                                active: vm.state.accountScope == .all
-                            ) {
-                                vm.setAccountScope(.all)
-                            }
-                            ForEach(vm.accounts) { acc in
-                                AccountScopeTab(
-                                    label: acc.label,
-                                    dotColor: p.accountDotColor(acc.id),
-                                    active: vm.state.accountScope == .account(acc.id)
-                                ) {
-                                    vm.setAccountScope(.account(acc.id))
+                VStack(alignment: .leading, spacing: 3) {
+                    ScrollViewReader { proxy in
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            DeckGlassCluster(spacing: 8) {
+                                HStack(spacing: 2) {
+                                    AccountScopeTab(
+                                        label: "全部",
+                                        dotColor: nil,
+                                        active: vm.state.accountScope == .all,
+                                        useLiquidGlass: !presentation.isFloatingPeek,
+                                        namespace: accountScopeNS
+                                    ) {
+                                        withAnimation(.spring(response: 0.30, dampingFraction: 0.82)) {
+                                            vm.setAccountScope(.all)
+                                            proxy.scrollTo("scope-all", anchor: .leading)
+                                        }
+                                    }
+                                    .id("scope-all")
+
+                                    ForEach(vm.accounts) { acc in
+                                        let scopeId = "scope-\(acc.id)"
+                                        AccountScopeTab(
+                                            label: acc.label,
+                                            dotColor: p.accountDotColor(acc.id),
+                                            active: vm.state.accountScope == .account(acc.id),
+                                            useLiquidGlass: !presentation.isFloatingPeek,
+                                            namespace: accountScopeNS
+                                        ) {
+                                            withAnimation(.spring(response: 0.30, dampingFraction: 0.82)) {
+                                                vm.setAccountScope(.account(acc.id))
+                                                proxy.scrollTo(scopeId, anchor: .center)
+                                            }
+                                        }
+                                        .id(scopeId)
+                                        .help(acc.address)
+                                    }
                                 }
-                                .help(acc.address)
                             }
+                            .padding(.leading, 1)
+                            .padding(.trailing, 14)
+                            .padding(.vertical, 3)
                         }
-                        .padding(2)
+                        .mask(
+                            HStack(spacing: 0) {
+                                Color.black
+                                LinearGradient(
+                                    colors: [.black, .clear],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                                .frame(width: 16)
+                            }
+                        )
                     }
-                    .background(p.ink.opacity(0.055), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
 
                     if let activeAcc = vm.activeAccount {
                         HStack(spacing: 5) {
                             Circle()
                                 .fill(p.accountDotColor(activeAcc.id))
-                                .frame(width: 6, height: 6)
+                                .frame(width: 5.5, height: 5.5)
                             Text(activeAcc.address)
                                 .font(.system(size: 11))
                                 .foregroundStyle(p.ink3)
                                 .lineLimit(1)
                         }
-                        .padding(.horizontal, 4)
+                        .padding(.horizontal, 8)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                 }
+                .padding(.top, 5)
+            }
+
+            // 3. 搜索与命令入口（展开态为独立交互式 Liquid Glass 胶囊，呼应中央 ⌘K 玻璃命令面板）
+            searchTriggerBar
                 .padding(.top, 8)
-            }
 
-            // 3. 搜索与命令入口
-            Button {
-                vm.paletteOpen = true
-            } label: {
-                HStack(spacing: 7) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 11.5, weight: .medium))
-                        .foregroundStyle(p.ink3)
-                    Text("搜索与命令")
-                        .font(.system(size: 12))
-                        .foregroundStyle(p.ink3)
-                    Spacer()
-                    KbdView(text: "⌘K")
-                }
-                .padding(.horizontal, 8)
-                .frame(height: 28)
-                .background(p.ink.opacity(0.048), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 8)
-
-            // 4. 分拣导航树
+            // 4. 分拣导航树（保持安静哑光，不做花哨玻璃行）
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -149,60 +173,133 @@ struct SidebarView: View {
 
             Spacer(minLength: 0)
 
-            // 5. 底部状态与控制栏
-            HStack(spacing: 4) {
-                Circle()
-                    .fill(vm.sourceMode == .appleMail ? p.sage : p.amber)
-                    .frame(width: 5.5, height: 5.5)
-                Text("已省 \(MailFormatting.savedMinutes(count: vm.state.handled.count)) 分钟")
-                    .font(.system(size: 11))
-                    .foregroundStyle(p.ink3)
-                    .lineLimit(1)
-                    .help(vm.sourceMode == .appleMail
-                          ? "已连接 Apple Mail · 自动过滤 \(vm.state.handled.count) 封通知与推广"
-                          : "当前为演示数据模式（按 ⌘K 可切换数据源）")
-
-                Spacer(minLength: 2)
-
-                if vm.sourceMode == .appleMail {
-                    IconFooterButton(
-                        systemName: "arrow.clockwise",
-                        help: "立即同步 Apple Mail（⌘R）"
-                    ) {
-                        Task { await vm.reloadSnapshot(initial: false) }
-                    }
-                } else if vm.supportsDemoControls {
-                    IconFooterButton(systemName: "envelope.badge", help: "模拟收到 3 封新邮件") {
-                        Task { await vm.simulateIncoming() }
-                    }
-                    IconFooterButton(systemName: "arrow.counterclockwise", help: "重置演示数据") {
-                        Task { await vm.resetDemo() }
-                    }
-                }
-
-                IconFooterButton(
-                    systemName: vm.themeMode == .dark ? "moon" : "sun.max",
-                    help: vm.themeMode == .dark ? "切换到浅色模式" : "切换到深色模式"
-                ) {
-                    vm.toggleTheme()
-                }
-
-                IconFooterButton(
-                    systemName: "gearshape",
-                    help: "设置（⌘,）"
-                ) {
-                    vm.openSettings()
-                }
+            // 5. 底部控制胶囊簇（极简无冗余统计文案）
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
+                footerControlsCluster
             }
-            .frame(height: 28)
-            .padding(.horizontal, 4)
+            .frame(height: 30)
+            .padding(.trailing, 1)
         }
         .padding(.horizontal, 10)
-        .padding(.top, 4)
-        .padding(.bottom, 8)
+        .padding(.top, presentation.isFloatingPeek ? 8 : 4)
+        .padding(.bottom, presentation.isFloatingPeek ? 10 : 8)
         .frame(width: 206)
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(p.canvas)
+    }
+
+    @ViewBuilder
+    private var searchTriggerBar: some View {
+        let button = Button {
+            presentation.dismissAction?()
+            vm.paletteOpen = true
+        } label: {
+            HStack(spacing: 7) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundStyle(searchHovered ? p.ink2 : p.ink3)
+                Text("搜索与命令")
+                    .font(.system(size: 12))
+                    .foregroundStyle(searchHovered ? p.ink2 : p.ink3)
+                Spacer()
+                KbdView(text: "⌘K")
+            }
+            .padding(.leading, 10)
+            .padding(.trailing, 7)
+            .frame(height: 29)
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .onHover { searchHovered = $0 }
+
+        if presentation.isFloatingPeek {
+            button
+                .background(
+                    Capsule()
+                        .fill(p.ink.opacity(searchHovered ? (p.mode == .dark ? 0.12 : 0.07) : (p.mode == .dark ? 0.08 : 0.048)))
+                )
+        } else {
+            button
+                .deckGlassCapsule(interactive: true)
+        }
+    }
+
+    @ViewBuilder
+    private var footerControlsCluster: some View {
+        let cluster = HStack(spacing: 1) {
+            if vm.sourceMode == .appleMail {
+                IconFooterButton(
+                    systemName: "arrow.clockwise",
+                    help: "立即同步 Apple Mail（⌘R）"
+                ) {
+                    Task { await vm.reloadSnapshot(initial: false) }
+                }
+            } else if vm.supportsDemoControls {
+                IconFooterButton(systemName: "envelope.badge", help: "模拟收到 3 封新邮件") {
+                    Task { await vm.simulateIncoming() }
+                }
+                IconFooterButton(systemName: "arrow.counterclockwise", help: "重置演示数据") {
+                    Task { await vm.resetDemo() }
+                }
+            }
+
+            IconFooterButton(
+                systemName: vm.themeMode == .dark ? "moon" : "sun.max",
+                help: vm.themeMode == .dark ? "切换到浅色模式" : "切换到深色模式"
+            ) {
+                vm.toggleTheme()
+            }
+
+            IconFooterButton(
+                systemName: "gearshape",
+                help: "设置（⌘,）"
+            ) {
+                presentation.dismissAction?()
+                vm.openSettings()
+            }
+        }
+        .padding(.horizontal, 3)
+        .padding(.vertical, 2)
+
+        if presentation.isFloatingPeek {
+            cluster
+                .background(Capsule().fill(p.ink.opacity(p.mode == .dark ? 0.08 : 0.048)))
+        } else {
+            cluster
+                .deckGlassCapsule(interactive: true)
+        }
+    }
+
+    @ViewBuilder
+    private var sidebarToggleButton: some View {
+        let btn = Button {
+            presentation.dismissAction?()
+            vm.toggleSidebar()
+        } label: {
+            Image(systemName: "sidebar.left")
+                .font(.system(size: 12.5, weight: .medium))
+                .foregroundStyle(toggleHovered ? p.ink : p.ink3)
+                .frame(width: 26, height: 26)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.snappy(duration: 0.16)) {
+                toggleHovered = hovering
+            }
+        }
+        .help(presentation.isFloatingPeek ? "固定展开侧边栏（[）" : "收起侧边栏（[）")
+
+        if presentation.isFloatingPeek {
+            btn.background(
+                Circle()
+                    .fill(toggleHovered ? p.ink.opacity(p.mode == .dark ? 0.11 : 0.06) : .clear)
+            )
+        } else if toggleHovered {
+            btn.deckGlassCapsule(interactive: true)
+        } else {
+            btn
+        }
     }
 }
 
@@ -211,10 +308,13 @@ private struct AccountScopeTab: View {
     let label: String
     let dotColor: Color?
     let active: Bool
+    let useLiquidGlass: Bool
+    let namespace: Namespace.ID
     let onTap: () -> Void
+    @State private var hovered = false
 
     var body: some View {
-        Button(action: onTap) {
+        let pill = Button(action: onTap) {
             HStack(spacing: 5) {
                 if let dotColor {
                     Circle()
@@ -223,23 +323,36 @@ private struct AccountScopeTab: View {
                 }
                 Text(label)
                     .font(.system(size: 11.5, weight: active ? .medium : .regular))
-                    .foregroundStyle(active ? p.ink : p.ink3)
+                    .foregroundStyle(active ? p.ink : (hovered ? p.ink2 : p.ink3))
                     .lineLimit(1)
             }
-            .padding(.horizontal, 7)
-            .padding(.vertical, 4)
-            .background(
-                Group {
-                    if active {
-                        RoundedRectangle(cornerRadius: 5, style: .continuous)
-                            .fill(p.paper)
-                            .shadow(color: .black.opacity(0.06), radius: 1, y: 0.5)
-                    }
-                }
-            )
-            .contentShape(Rectangle())
+            .padding(.horizontal, 9)
+            .frame(height: 25)
+            .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+        .onHover { hovered = $0 }
+
+        if active {
+            if useLiquidGlass {
+                pill
+                    .deckGlassCapsule(interactive: true)
+                    .deckGlassID("active-account-scope", in: namespace)
+            } else {
+                pill
+                    .background(
+                        Capsule()
+                            .fill(p.ink.opacity(p.mode == .dark ? 0.14 : 0.08))
+                            .matchedGeometryEffect(id: "peek-account-scope", in: namespace)
+                    )
+            }
+        } else {
+            pill
+                .background(
+                    Capsule()
+                        .fill(hovered ? p.ink.opacity(p.mode == .dark ? 0.07 : 0.038) : .clear)
+                )
+        }
     }
 }
 
@@ -249,6 +362,7 @@ private struct SidebarFolderRow: View {
     let count: Int
     let active: Bool
     let onTap: () -> Void
+    @State private var hovered = false
 
     private var iconName: String {
         switch def.id {
@@ -294,11 +408,12 @@ private struct SidebarFolderRow: View {
             .frame(height: 28)
             .background(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(active ? p.ink.opacity(0.065) : Color.clear)
+                    .fill(active ? p.ink.opacity(p.mode == .dark ? 0.11 : 0.068) : (hovered ? p.ink.opacity(0.036) : Color.clear))
             )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .onHover { hovered = $0 }
     }
 }
 
@@ -307,16 +422,22 @@ private struct IconFooterButton: View {
     let systemName: String
     let help: String
     let action: () -> Void
+    @State private var hovered = false
 
     var body: some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(p.ink3)
+                .font(.system(size: 11.5, weight: .medium))
+                .foregroundStyle(hovered ? p.ink : p.ink3)
                 .frame(width: 24, height: 24)
-                .contentShape(Rectangle())
+                .background(
+                    Circle()
+                        .fill(hovered ? p.ink.opacity(p.mode == .dark ? 0.12 : 0.065) : .clear)
+                )
+                .contentShape(Circle())
         }
         .buttonStyle(.plain)
+        .onHover { hovered = $0 }
         .help(help)
     }
 }

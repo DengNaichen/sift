@@ -5,6 +5,8 @@ import MailroomCore
 struct SettingsSidebarView: View {
     @Environment(\.palette) private var p
     let vm: DeckViewModel
+    @State private var backHovered = false
+    @State private var searchHovered = false
 
     private var connectionSections: [SettingsSection] {
         [.accounts, .triage, .ai]
@@ -23,7 +25,7 @@ struct SettingsSidebarView: View {
                 HStack(spacing: 7) {
                     Image(systemName: "arrow.left")
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(p.ink2)
+                        .foregroundStyle(backHovered ? p.ink : p.ink2)
                     Text("返回收件箱")
                         .font(.system(size: 12.5, weight: .medium))
                         .foregroundStyle(p.ink)
@@ -34,32 +36,36 @@ struct SettingsSidebarView: View {
                 .frame(height: 32)
                 .background(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color.clear)
+                        .fill(backHovered ? p.ink.opacity(0.045) : Color.clear)
                 )
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .onHover { backHovered = $0 }
             .help("返回收件箱（Esc）")
 
-            // 2. 搜索与命令入口
+            // 2. 搜索与命令入口（与收件箱侧栏一致的交互式 Liquid Glass 胶囊）
             Button {
                 vm.paletteOpen = true
             } label: {
                 HStack(spacing: 7) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 11.5, weight: .medium))
-                        .foregroundStyle(p.ink3)
+                        .foregroundStyle(searchHovered ? p.ink2 : p.ink3)
                     Text("搜索与命令")
                         .font(.system(size: 12))
-                        .foregroundStyle(p.ink3)
+                        .foregroundStyle(searchHovered ? p.ink2 : p.ink3)
                     Spacer()
                     KbdView(text: "⌘K")
                 }
-                .padding(.horizontal, 8)
-                .frame(height: 28)
-                .background(p.ink.opacity(0.048), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .padding(.leading, 10)
+                .padding(.trailing, 7)
+                .frame(height: 29)
+                .contentShape(Capsule())
             }
             .buttonStyle(.plain)
+            .onHover { searchHovered = $0 }
+            .deckGlassCapsule(interactive: true)
             .padding(.top, 8)
 
             // 3. 五大设置分组
@@ -73,40 +79,31 @@ struct SettingsSidebarView: View {
 
             Spacer(minLength: 0)
 
-            // 4. 底部状态栏
-            HStack(spacing: 5.5) {
-                Circle()
-                    .fill(vm.sourceMode == .appleMail ? p.sage : p.amber)
-                    .frame(width: 5.5, height: 5.5)
-                Text("Mailroom")
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(p.ink3)
-                    .lineLimit(1)
-
-                Spacer(minLength: 2)
+            // 4. 底部控制按钮（与收件箱侧栏一致极简留白）
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
 
                 Button {
                     vm.closeSettings()
                 } label: {
                     Image(systemName: "gearshape")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 11.5, weight: .medium))
                         .foregroundStyle(p.ink)
-                        .frame(width: 24, height: 24)
-                        .background(p.ink.opacity(0.065), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                        .contentShape(Rectangle())
+                        .frame(width: 28, height: 28)
+                        .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .deckGlassCapsule(interactive: true)
                 .help("关闭设置（⌘,）")
             }
-            .frame(height: 28)
-            .padding(.horizontal, 4)
+            .frame(height: 30)
+            .padding(.trailing, 1)
         }
         .padding(.horizontal, 10)
         .padding(.top, 4)
         .padding(.bottom, 8)
         .frame(width: 206)
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(p.canvas)
     }
 
     private func sectionGroup(title: String, items: [SettingsSection]) -> some View {
