@@ -1,0 +1,10 @@
+# Prototypes
+
+存放 Mailroom Deck 的 UI / 交互原型与配套设计文档。
+
+## 索引
+
+| 名称 | 入口文件 | 状态 | 说明 |
+| --- | --- | --- | --- |
+| Settings 设置页 | [settings-prototype.html](settings/settings-prototype.html) | 参考中 | 5 栏设置页（Accounts / Triage / AI / Appearance / Diagnostics）完整交互原型，配套设计说明见 [settings_design.md](settings/settings_design.md) |
+| Fluid Selection 列表选中态 | [fluid-selection-lab.html](fluid-selection/fluid-selection-lab.html) | 参考中 | 邮件列表选中态与视觉实验原型，配套对比与预览笔记见 [fluid_selection_preview.md](fluid-selection/fluid_selection_preview.md) 与 [superhuman_vs_linear_comparison.md](fluid-selection/superhuman_vs_linear_comparison.md) |
