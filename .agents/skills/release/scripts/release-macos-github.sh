@@ -1,7 +1,7 @@
 #!/bin/zsh
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 INFO_PLIST="$ROOT_DIR/Config/Info.plist"
 APP_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleName' "$INFO_PLIST")"
 DIST_DIR="$ROOT_DIR/dist/github-release"
@@ -77,7 +77,7 @@ Actual tag:   ${GITHUB_TAG}
 App version:  ${VERSION}
 App build:    ${BUILD}
 
-Run ./scripts/bump-version.sh <version> before releasing.
+Run ./.agents/skills/release/scripts/bump-version.sh <version> before releasing.
 EOF
   exit 1
 fi

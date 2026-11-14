@@ -13,7 +13,7 @@ if [[ ! "$VERSION" =~ '^[0-9]+\.[0-9]+\.[0-9]+$' ]]; then
   exit 1
 fi
 
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 INFO_PLIST="$ROOT_DIR/Config/Info.plist"
 
 cd "$ROOT_DIR"

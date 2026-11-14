@@ -109,11 +109,11 @@ swift run mailroom-bridge export-eval --limit 20 --output /tmp/mailroom-eval.jso
 
 ## 发布流水线
 
-仓库内置了与 GitHub Actions 对齐的签名、Apple 公证与 DMG 发布脚本（见 [.github/workflows/macos-release.yml](.github/workflows/macos-release.yml)）：
+仓库内置了与 GitHub Actions 对齐的签名、Apple 公证与 DMG 发布流程（详见 [release skill](.agents/skills/release/SKILL.md) 与 [.github/workflows/macos-release.yml](.github/workflows/macos-release.yml)）：
 
 ```bash
-# 在干净且同步的 main 分支上更新版本号（或为当前版本打标）并推送 v* tag 自动触发云端公证发版
-./scripts/bump-version.sh 0.0.1
+# 在干净且同步的 main 分支上更新版本号并推送 v* tag 自动触发云端公证发版
+./.agents/skills/release/scripts/bump-version.sh 0.0.2
 ```
 
 ## 开源协议

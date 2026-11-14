@@ -1,7 +1,7 @@
 #!/bin/zsh
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 ENV_FILE="$ROOT_DIR/.env.release"
 DIST_ROOT="$ROOT_DIR/dist/github-release"
 

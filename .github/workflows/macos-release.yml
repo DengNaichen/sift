@@ -99,7 +99,7 @@ jobs:
           echo "RUNNER_KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
 
       - name: Store Notarytool Credentials
-        run: ./scripts/setup-notarytool-profile.sh
+        run: ./.agents/skills/release/scripts/setup-notarytool-profile.sh
 
       - name: Resolve Release Metadata
         run: |
@@ -136,7 +136,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Build And Notarize Release DMG
-        run: ./scripts/release-macos-github.sh
+        run: ./.agents/skills/release/scripts/release-macos-github.sh
 
       - name: Prepare Release Artifact Payload
         if: always()
@@ -163,7 +163,7 @@ jobs:
           echo "RELEASE_ARTIFACT_DIR=$ARTIFACT_DIR" >> "$GITHUB_ENV"
 
       - name: Publish GitHub Release
-        run: ./scripts/publish-github-release.sh
+        run: ./.agents/skills/release/scripts/publish-github-release.sh
 
       - name: Upload Release Artifacts
         if: always()
