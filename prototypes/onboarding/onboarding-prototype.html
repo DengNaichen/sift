@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sift — Onboarding 权限引导交互原型</title>
+<style>
+  :root {
+    --canvas: #FAFBFD;
+    --paper: #FFFFFF;
+    --raised: #FFFFFF;
+    --sunken: #F5F7FA;
+    --hover-fill: rgba(15, 23, 42, 0.032);
+    --active-nav: rgba(15, 17, 23, 0.068);
+    --ink: #0F1117;
+    --ink2: #484E5C;
+    --ink3: #878E9C;
+    --line: rgba(15, 20, 32, 0.055);
+    --line-strong: rgba(15, 20, 32, 0.105);
+    --amber: #B86E14;
+    --cobalt: #3B63E6;
+    --sage: #25855A;
+    --coral: #D1434E;
+    --paper-shadow: 0 1px 3px rgba(0, 0, 0, 0.035);
+    --card-shadow: 0 14px 36px rgba(15, 20, 32, 0.065), 0 1px 3px rgba(15, 20, 32, 0.04);
+    --window-shadow: 0 26px 70px rgba(15, 20, 32, 0.16), 0 0 0 1px rgba(15, 20, 32, 0.08);
+    --backdrop-bg: #ECEFF4;
+    --kbd-bg: rgba(15, 17, 23, 0.065);
+    --glass-bg: rgba(255, 255, 255, 0.78);
+    --glass-border: rgba(15, 20, 32, 0.08);
+  }
+
+  [data-theme="dark"] {
+    --canvas: #101114;
+    --paper: #16171B;
+    --raised: #191A20;
+    --sunken: #1E1F26;
+    --hover-fill: rgba(255, 255, 255, 0.034);
+    --active-nav: rgba(255, 255, 255, 0.105);
+    --ink: #ECEDEF;
+    --ink2: #A5A9B3;
+    --ink3: #686C77;
+    --line: rgba(255, 255, 255, 0.055);
+    --line-strong: rgba(255, 255, 255, 0.115);
+    --amber: #F1A638;
+    --cobalt: #6B9AFF;
+    --sage: #4CC38A;
+    --coral: #F26B75;
+    --paper-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    --card-shadow: 0 20px 44px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    --window-shadow: 0 28px 80px rgba(0, 0, 0, 0.62), 0 0 0 1px rgba(255, 255, 255, 0.09);
+    --backdrop-bg: #090A0D;
+    --kbd-bg: rgba(255, 255, 255, 0.085);
+    --glass-bg: rgba(30, 31, 38, 0.76);
+    --glass-border: rgba(255, 255, 255, 0.11);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+    background: var(--backdrop-bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px 18px;
+    user-select: none;
+  }
+
+  .mono {
+    font-family: "SF Mono", ui-monospace, Menlo, Monaco, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 原型状态切换条（仅原型走查用） */
+  .proto-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+    font-size: 11.5px;
+    color: var(--ink3);
+    max-width: 1220px;
+  }
+  .proto-seg {
+    display: inline-flex;
+    flex-wrap: wrap;
+    background: var(--sunken);
+    padding: 2px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    gap: 2px;
+  }
+  .proto-seg button {
+    border: none;
+    background: transparent;
+    color: var(--ink3);
+    font-size: 11px;
+    padding: 3px 8.5px;
+    border-radius: 4.5px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.14s ease;
+  }
+  .proto-seg button:hover {
+    color: var(--ink);
+  }
+  .proto-seg button.active {
+    background: var(--paper);
+    color: var(--ink);
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+  }
+  [data-theme="dark"] .proto-seg button.active {
+    background: rgba(255,255,255,0.11);
+  }
+  .proto-divider {
+    width: 1px;
+    height: 12px;
+    background: var(--line-strong);
+  }
+
+  /* macOS 窗口 (1220 × 780) */
+  .mac-window {
+    width: 1220px;
+    height: 780px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 76px);
+    background: var(--canvas);
+    border-radius: 14px;
+    box-shadow: var(--window-shadow);
+    display: flex;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .traffic-lights {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 20;
+  }
+  .tl {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 0.5px solid rgba(0,0,0,0.12);
+  }
+  .tl.close { background: #FF5F57; }
+  .tl.min { background: #FEBC2E; }
+  .tl.max { background: #28C840; }
+
+  .silk-logo {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: radial-gradient(circle at 82% 84%, #F6B06F 0%, rgba(246,176,111,0) 58%),
+                radial-gradient(circle at 85% 18%, #ECC7E2 0%, rgba(236,199,226,0) 52%),
+                linear-gradient(135deg, #9E6FF6 0%, #B588FC 52%, #DCC3FD 100%);
+    flex-shrink: 0;
+  }
+  [data-silk="iris"] .silk-logo {
+    background: radial-gradient(circle at 82% 84%, #ADE7FD 0%, rgba(173,231,253,0) 58%),
+                radial-gradient(circle at 85% 18%, #DAD0FE 0%, rgba(218,208,254,0) 52%),
+                linear-gradient(135deg, #6982F6 0%, #8BA7FD 52%, #D5E2FE 100%);
+  }
+  [data-silk="peach"] .silk-logo {
+    background: radial-gradient(circle at 82% 84%, #FBC274 0%, rgba(251,194,116,0) 58%),
+                radial-gradient(circle at 85% 18%, #FDE0C9 0%, rgba(253,224,201,0) 52%),
+                linear-gradient(135deg, #D282E4 0%, #F4A4B6 52%, #FCDAD5 100%);
+  }
+  .silk-logo.lg {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    box-shadow: 0 4px 12px rgba(158, 111, 246, 0.25);
+  }
+  [data-silk="iris"] .silk-logo.lg {
+    box-shadow: 0 4px 12px rgba(105, 130, 246, 0.25);
+  }
+  [data-silk="peach"] .silk-logo.lg {
+    box-shadow: 0 4px 12px rgba(244, 164, 182, 0.28);
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot.amber { background: var(--amber); }
+  .dot.sage { background: var(--sage); }
+  .dot.coral { background: var(--coral); }
+  .dot.cobalt { background: var(--cobalt); }
+  .dot.muted { background: var(--ink3); opacity: 0.4; }
+
+  /* ============ Onboarding 专注舞台 ============ */
+  .onboarding-stage {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    background: var(--paper);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 22px 24px;
+    overflow-y: auto;
+  }
+
+  /* 右上角轻量工具按钮（主题切换 + 设置） */
+  .stage-corner-actions {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ghost-icon-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink3);
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.14s ease;
+  }
+  .ghost-icon-btn:hover {
+    color: var(--ink);
+    background: var(--sunken);
+    border-color: var(--line-strong);
+  }
+
+  /* 居中引导主卡 */
+  .onboarding-card {
+    width: 540px;
+    max-width: 100%;
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 22px 26px 16px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .brand-lockup {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+  .brand-lockup-title {
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.2px;
+  }
+  .brand-badge {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--ink3);
+    padding: 2.5px 8px;
+    border-radius: 999px;
+    background: var(--sunken);
+    border: 1px solid var(--line);
+  }
+  .card-subtitle {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink2);
+  }
+
+  /* 警告块（DMG / 未配置 Mail / 重启兜底） */
+  .guard-banner {
+    margin: 16px 24px 0;
+    padding: 13px 14px;
+    border-radius: 10px;
+    background: var(--sunken);
+    border: 1px solid var(--line-strong);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .guard-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+  }
+  .guard-top .dot {
+    margin-top: 5px;
+  }
+  .guard-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .guard-desc {
+    margin-top: 2px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--ink2);
+  }
+  .guard-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 15px;
+  }
+
+  /* 引导步骤容器 */
+  .steps-body {
+    padding: 14px 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .step-card {
+    border-radius: 10px;
+    background: var(--sunken);
+    border: 1px solid var(--line);
+    padding: 11px 15px;
+    transition: opacity 0.16s ease, border-color 0.16s ease;
+  }
+  .step-card.active {
+    border-color: var(--line-strong);
+  }
+  .step-card.dimmed {
+    opacity: 0.56;
+  }
+
+  .step-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .step-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-num.done {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--canvas);
+  }
+  .step-title-col {
+    flex: 1;
+    min-width: 0;
+  }
+  .step-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .step-meta {
+    margin-top: 1.5px;
+    font-size: 11.5px;
+    color: var(--ink3);
+  }
+  .step-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5.5px;
+    font-size: 11.5px;
+    color: var(--ink2);
+    white-space: nowrap;
+  }
+
+  .step-detail {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  /* 经典 macOS 可拖拽 App 图标组件 */
+  .drag-well {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--paper);
+    border: 1px dashed var(--line-strong);
+  }
+  .app-drag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px 6px 7px;
+    border-radius: 7px;
+    background: var(--sunken);
+    border: 1px solid var(--line-strong);
+    cursor: grab;
+    flex-shrink: 0;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .app-drag-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  }
+  .app-drag-chip:active {
+    cursor: grabbing;
+    transform: scale(0.98);
+  }
+  .app-drag-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .drag-hint {
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--ink2);
+  }
+
+  .btn-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .btn {
+    height: 28px;
+    padding: 0 11px;
+    border-radius: 6.5px;
+    font-size: 12px;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    border: 1px solid var(--line-strong);
+    background: var(--paper);
+    color: var(--ink2);
+    transition: all 0.12s ease;
+  }
+  .btn:hover {
+    color: var(--ink);
+    border-color: var(--ink3);
+  }
+  .btn.primary {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--canvas);
+    font-weight: 500;
+  }
+  .btn.primary:hover {
+    opacity: 0.9;
+  }
+
+  .inline-note {
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--ink3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .text-link {
+    border: none;
+    background: transparent;
+    color: var(--ink2);
+    font-size: 11.5px;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    padding: 0;
+  }
+  .text-link:hover {
+    color: var(--ink);
+  }
+
+  /* 识别到的邮箱摘要条 */
+  .detected-accounts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .account-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    border-radius: 6px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    font-size: 11.5px;
+    color: var(--ink2);
+  }
+
+  /* 决策模型配置表 */
+  .quiet-tag {
+    font-size: 10px;
+    color: var(--ink3);
+    background: var(--kbd-bg);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 400;
+  }
+  .config-box {
+    border-radius: 8px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .config-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 11px;
+  }
+  .config-row + .config-row {
+    border-top: 1px solid var(--line);
+  }
+  .config-label {
+    width: 78px;
+    flex-shrink: 0;
+    font-size: 11.5px;
+    color: var(--ink2);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .config-field {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .seg-control {
+    display: inline-flex;
+    padding: 2px;
+    border-radius: 6px;
+    background: var(--kbd-bg);
+    gap: 1px;
+  }
+  .seg-control button {
+    border: none;
+    background: transparent;
+    color: var(--ink3);
+    font-size: 11px;
+    font-family: inherit;
+    padding: 3px 8px;
+    border-radius: 4.5px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .seg-control button:hover {
+    color: var(--ink);
+  }
+  .seg-control button.active {
+    background: var(--paper);
+    color: var(--ink);
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+  }
+  [data-theme="dark"] .seg-control button.active {
+    background: rgba(255,255,255,0.11);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.28);
+  }
+  .text-input {
+    width: 100%;
+    height: 28px;
+    padding: 0 9px;
+    border-radius: 6px;
+    border: 1px solid var(--line-strong);
+    background: var(--canvas);
+    color: var(--ink);
+    font-size: 11.5px;
+    font-family: inherit;
+    outline: none;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+  .text-input.mono {
+    font-size: 11px;
+  }
+  .text-input:focus {
+    border-color: var(--ink3);
+    background: var(--paper);
+  }
+  .text-input::placeholder {
+    color: var(--ink3);
+  }
+
+  /* 丝绸三配色选择卡 */
+  .silk-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .silk-card {
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--canvas);
+    padding: 7px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    text-align: left;
+    font-family: inherit;
+    transition: border-color 0.14s ease, background 0.14s ease;
+  }
+  .silk-card:hover {
+    border-color: var(--line-strong);
+  }
+  .silk-card.selected {
+    background: var(--paper);
+    border-color: var(--ink3);
+  }
+  .silk-preview {
+    height: 54px;
+    border-radius: 5.5px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .silk-mini-row {
+    padding: 2px 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .silk-mini-selected {
+    padding: 5px 6px;
+    border-radius: 4.5px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border: 1px solid rgba(15, 20, 32, 0.045);
+  }
+  [data-theme="dark"] .silk-mini-selected {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .silk-mini-selected.apricot {
+    background: radial-gradient(circle at 86% 85%, rgba(246, 176, 111, 0.36) 0%, rgba(246, 176, 111, 0) 62%),
+                linear-gradient(100deg, #FBF9FF 0%, #EFE8FE 55%, #F8ECF7 100%);
+  }
+  .silk-mini-selected.iris {
+    background: radial-gradient(circle at 86% 85%, rgba(173, 231, 253, 0.45) 0%, rgba(173, 231, 253, 0) 62%),
+                linear-gradient(100deg, #F8FAFF 0%, #E9F0FF 55%, #EFF0FF 100%);
+  }
+  .silk-mini-selected.peach {
+    background: radial-gradient(circle at 86% 85%, rgba(251, 194, 116, 0.40) 0%, rgba(251, 194, 116, 0) 62%),
+                linear-gradient(100deg, #FFF9F8 0%, #FCEBF0 55%, #FEF2EA 100%);
+  }
+  [data-theme="dark"] .silk-mini-selected.apricot {
+    background: radial-gradient(circle at 86% 85%, rgba(90, 55, 50, 0.92) 0%, rgba(90, 55, 50, 0) 65%),
+                linear-gradient(100deg, #211D35 0%, #2F264B 58%, #3F2D50 100%);
+  }
+  [data-theme="dark"] .silk-mini-selected.iris {
+    background: radial-gradient(circle at 86% 85%, rgba(42, 70, 93, 0.92) 0%, rgba(42, 70, 93, 0) 65%),
+                linear-gradient(100deg, #1B2136 0%, #242F50 58%, #2F3757 100%);
+  }
+  [data-theme="dark"] .silk-mini-selected.peach {
+    background: radial-gradient(circle at 86% 85%, rgba(93, 57, 42, 0.92) 0%, rgba(93, 57, 42, 0) 65%),
+                linear-gradient(100deg, #2B1E32 0%, #44273C 58%, #4B2F3F 100%);
+  }
+  .mini-bar {
+    height: 3.5px;
+    border-radius: 2px;
+    background: var(--ink);
+    opacity: 0.14;
+  }
+  .silk-mini-selected .mini-bar.strong {
+    opacity: 0.42;
+  }
+  .silk-mini-selected .mini-bar.sub {
+    opacity: 0.2;
+  }
+  .silk-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 2px;
+  }
+  .silk-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .silk-swatch.apricot {
+    background: linear-gradient(135deg, #9E6FF6 0%, #B588FC 50%, #F6B06F 100%);
+  }
+  .silk-swatch.iris {
+    background: linear-gradient(135deg, #6982F6 0%, #8BA7FD 50%, #ADE7FD 100%);
+  }
+  .silk-swatch.peach {
+    background: linear-gradient(135deg, #D282E4 0%, #F4A4B6 50%, #FBC274 100%);
+  }
+  .silk-card-title {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .silk-card-meta .quiet-tag {
+    margin-left: auto;
+  }
+
+  /* 分拣偏好表（Superhuman 6 类可配去向） */
+  .triage-preset-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .triage-preset-label {
+    font-size: 11px;
+    color: var(--ink3);
+  }
+  .triage-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 5.5px 10px;
+  }
+  .triage-row + .triage-row {
+    border-top: 1px solid var(--line);
+  }
+  .triage-name-col {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    min-width: 0;
+  }
+  .triage-name {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .triage-hint {
+    font-size: 10.5px;
+    color: var(--ink3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .triage-ctrl {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .seg-control.compact button {
+    padding: 2.5px 7.5px;
+    font-size: 10.5px;
+  }
+
+  .card-footer {
+    padding: 13px 24px 16px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--canvas);
+  }
+  .poll-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--ink3);
+  }
+  .pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink3);
+    opacity: 0.55;
+    animation: pulse 1.8s infinite ease-in-out;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: scale(0.9); }
+    50% { opacity: 0.9; transform: scale(1.1); }
+  }
+
+  /* ============ 演示模式三栏工作台对比视图 ============ */
+  .workspace-shell {
+    flex: 1;
+    display: flex;
+    width: 100%;
+    height: 100%;
+  }
+  .sidebar {
+    width: 206px;
+    flex-shrink: 0;
+    height: 100%;
+    background: var(--canvas);
+    border-right: 1px solid var(--line-strong);
+    padding: 40px 10px 10px;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-brand {
+    height: 32px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .sidebar-nav {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+  }
+  .nav-group-label {
+    font-size: 10.5px;
+    color: var(--ink3);
+    padding: 6px 8px 3px;
+  }
+  .nav-item {
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--ink2);
+  }
+  .nav-item.active {
+    background: var(--active-nav);
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .demo-sidebar-card {
+    padding: 9px 10px;
+    border-radius: 9px;
+    background: var(--sunken);
+    border: 1px solid var(--line-strong);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 10px;
+  }
+  .demo-sidebar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .demo-sidebar-top .left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .demo-sidebar-sub {
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--ink3);
+  }
+  .demo-connect-btn {
+    width: 100%;
+    height: 25px;
+    border-radius: 6px;
+    border: none;
+    background: var(--ink);
+    color: var(--canvas);
+    font-size: 11.5px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .mail-list {
+    width: 352px;
+    flex-shrink: 0;
+    background: var(--paper);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+  }
+  .pane-top {
+    height: 44px;
+    padding: 0 18px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+    gap: 8px;
+  }
+  .mail-card-item {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .mail-card-item.active {
+    background: linear-gradient(135deg, rgba(181,136,252,0.12), rgba(246,176,111,0.12));
+  }
+  .mail-card-item .sender {
+    font-size: 11.5px;
+    color: var(--ink2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mail-card-item .subj {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .mail-card-item .snip {
+    font-size: 11.5px;
+    color: var(--ink3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .reading-pane {
+    flex: 1;
+    background: var(--paper);
+    position: relative;
+    padding: 12px 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .floating-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .glass-pill {
+    height: 30px;
+    padding: 0 11px;
+    border-radius: 999px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--ink2);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .glass-pill.clickable {
+    cursor: pointer;
+  }
+  .glass-pill.clickable:hover {
+    color: var(--ink);
+  }
+  .glass-pill .action-chip {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .reading-article {
+    margin-top: 26px;
+    max-width: 560px;
+  }
+  .reading-article h2 {
+    font-size: 18.5px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  .reading-article p {
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--ink2);
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <div class="proto-seg" id="themeSeg">
+    <button class="active" data-theme="light">浅色</button>
+    <button data-theme="dark">深色</button>
+  </div>
+  <div class="proto-divider"></div>
+  <div class="proto-seg" id="scenarioSeg">
+    <button class="active" data-scene="step1">1. FDA 待授权</button>
+    <button data-scene="dmg">2. DMG 只读卷</button>
+    <button data-scene="step1-relaunch">3. 需重启生效</button>
+    <button data-scene="step2-pending">4. 自动化待授权</button>
+    <button data-scene="step2-denied">5. 自动化已拒绝</button>
+    <button data-scene="no-mail">6. 未配置 Mail</button>
+    <button data-scene="step3-pending">7. 模型待配置</button>
+    <button data-scene="step4-triage">8. 分拣偏好</button>
+    <button data-scene="ready">9. 主题与就绪</button>
+    <button data-scene="demo-workspace">10. 演示工作台</button>
+  </div>
+</div>
+
+<div class="mac-window">
+  <div class="traffic-lights">
+    <div class="tl close"></div>
+    <div class="tl min"></div>
+    <div class="tl max"></div>
+  </div>
+
+  <!-- Onboarding 居中舞台 -->
+  <div class="onboarding-stage" id="onboardingStage">
+    <div class="stage-corner-actions">
+      <button class="ghost-icon-btn" id="quickThemeBtn" title="切换浅色 / 深色外观">◐</button>
+    </div>
+
+    <div class="onboarding-card">
+      <div class="card-header">
+        <div class="brand-lockup">
+          <div class="silk-logo lg"></div>
+          <div>
+            <div class="brand-lockup-title">连接本机 Apple Mail</div>
+          </div>
+          <span class="brand-badge hidden" id="headerBadge"></span>
+        </div>
+        <div class="card-subtitle">
+          授权本机「邮件」读写、连接决策模型并设定分拣规则后即可开始。
+        </div>
+      </div>
+
+      <!-- DMG / AppTranslocation 阻断提示 -->
+      <div class="guard-banner hidden" id="dmgGuard">
+        <div class="guard-top">
+          <span class="dot amber"></span>
+          <div>
+            <div class="guard-title">请先将 Sift 移入「应用程序」文件夹</div>
+            <div class="guard-desc">
+              当前应用正在只读镜像（<span class="mono">/Volumes/Sift</span>）中运行。若此时授予系统权限，卸载安装包后授权路径将失效。
+            </div>
+          </div>
+        </div>
+        <div class="guard-actions">
+          <button class="btn primary" id="dmgMoveBtn">移入「应用程序」并重启</button>
+          <button class="btn">打开「应用程序」</button>
+          <button class="btn">在 Finder 中显示</button>
+        </div>
+      </div>
+
+      <!-- 已开 FDA 但未配置 Apple Mail -->
+      <div class="guard-banner hidden" id="noMailGuard">
+        <div class="guard-top">
+          <span class="dot amber"></span>
+          <div>
+            <div class="guard-title">未检测到本机 Apple Mail 邮箱数据</div>
+            <div class="guard-desc">
+              已获得磁盘访问权限，但 <span class="mono">~/Library/Mail</span> 中尚无收件箱数据库。请先打开系统「邮件」登录至少一个邮箱账户，Sift 会自动感知并接入。
+            </div>
+          </div>
+        </div>
+        <div class="guard-actions">
+          <button class="btn primary" id="openMailAppBtn">打开 Apple Mail</button>
+          <button class="btn" id="recheckNoMailBtn">重新检测</button>
+        </div>
+      </div>
+
+      <div class="steps-body" id="stepsBody">
+        <!-- Step 1: Full Disk Access -->
+        <div class="step-card active" id="step1Card">
+          <div class="step-head">
+            <span class="step-num" id="step1Num">1</span>
+            <div class="step-title-col">
+              <div class="step-title">完全磁盘访问</div>
+              <div class="step-meta" id="step1Meta">只读读取 ~/Library/Mail 收件箱索引与正文</div>
+            </div>
+            <div class="step-status" id="step1Status">
+              <span class="dot amber"></span>
+              <span>待授权</span>
+            </div>
+          </div>
+
+          <div class="step-detail" id="step1Detail">
+            <div class="drag-well">
+              <div class="app-drag-chip" draggable="true" title="按住并拖入系统设置 → 完全磁盘访问权限列表">
+                <div class="silk-logo"></div>
+                <span class="app-drag-name">Sift.app</span>
+              </div>
+              <div class="drag-hint">
+                将左侧 <strong>Sift.app</strong> 拖入系统设置列表并打开开关。
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn primary" id="openFdaBtn">打开系统设置</button>
+              <button class="btn">在 Finder 中显示</button>
+              <button class="btn hidden" id="relaunchBtn">重启 Sift 以应用权限</button>
+            </div>
+
+            <div class="inline-note hidden" id="fdaNote">
+              <span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Automation -->
+        <div class="step-card dimmed" id="step2Card">
+          <div class="step-head">
+            <span class="step-num" id="step2Num">2</span>
+            <div class="step-title-col">
+              <div class="step-title">控制「邮件」</div>
+              <div class="step-meta" id="step2Meta">同步归档、标旗与移入废纸篓动作</div>
+            </div>
+            <div class="step-status" id="step2Status">
+              <span>等待第 1 步</span>
+            </div>
+          </div>
+
+          <div class="step-detail hidden" id="step2Detail">
+            <div class="detected-accounts" id="detectedAccounts">
+              <span class="account-pill"><span class="dot cobalt"></span>工作 · lin@studio-north.cn</span>
+              <span class="account-pill"><span class="dot sage"></span>个人 · lin.personal@icloud.com</span>
+            </div>
+
+            <div class="btn-row" id="step2Actions">
+              <button class="btn primary" id="askAutoBtn">授予控制权限</button>
+              <button class="btn hidden" id="openAutoSettingsBtn">前往系统设置开启</button>
+              <button class="btn hidden" id="recheckAutoBtn">重新检测</button>
+            </div>
+
+            <div class="inline-note" id="step2Note">
+              <span>点击后将轻声唤醒 Apple Mail 并弹出系统确认框。</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Decision Model -->
+        <div class="step-card dimmed" id="step3Card">
+          <div class="step-head">
+            <span class="step-num" id="step3Num">3</span>
+            <div class="step-title-col">
+              <div class="step-title">连接决策模型</div>
+              <div class="step-meta" id="step3Meta">支持 Gemini、OpenAI、Jev 或任意 System 1 兼容端点</div>
+            </div>
+            <div class="step-status" id="step3Status">
+              <span>等待前面步骤</span>
+            </div>
+          </div>
+
+          <div class="step-detail hidden" id="step3Detail">
+            <div class="config-box">
+              <div class="config-row">
+                <span class="config-label">服务商</span>
+                <div class="config-field">
+                  <div class="seg-control" id="providerSeg">
+                    <button class="active" data-provider="gemini">Gemini</button>
+                    <button data-provider="openai">OpenAI</button>
+                    <button data-provider="claude">Claude</button>
+                    <button data-provider="custom">Jev / 自定义</button>
+                  </div>
+                </div>
+              </div>
+              <div class="config-row">
+                <span class="config-label">Model</span>
+                <div class="config-field">
+                  <input class="text-input mono" id="modelNameInput" value="gemini-decision-1" placeholder="如 gemini-decision-1 / gpt-4o-mini / jev" />
+                </div>
+              </div>
+              <div class="config-row">
+                <span class="config-label">Endpoint</span>
+                <div class="config-field">
+                  <input class="text-input mono" id="modelEndpointInput" value="https://generativelanguage.googleapis.com/v1beta/decisions" placeholder="https://..." />
+                </div>
+              </div>
+              <div class="config-row">
+                <span class="config-label">API Key <span class="quiet-tag">钥匙串</span></span>
+                <div class="config-field">
+                  <input type="password" class="text-input mono" id="apiKeyInput" value="AIzaSyDemoKey9283749283" placeholder="输入密钥…" />
+                  <button class="btn" id="toggleApiKeyBtn">显示</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn primary" id="testModelBtn">测试连接</button>
+              <span class="inline-note hidden" id="step3Note" style="justify-content:flex-start; gap:6px;"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Superhuman Triage Preferences -->
+        <div class="step-card dimmed" id="step4Card">
+          <div class="step-head">
+            <span class="step-num" id="step4Num">4</span>
+            <div class="step-title-col">
+              <div class="step-title">设置分拣偏好</div>
+              <div class="step-meta" id="step4Meta">配置 6 类来信的默认去向（受系统安全护栏保护）</div>
+            </div>
+            <div class="step-status" id="step4Status">
+              <span>等待前面步骤</span>
+            </div>
+          </div>
+
+          <div class="step-detail hidden" id="step4Detail">
+            <div class="triage-preset-bar">
+              <span class="triage-preset-label">快捷预设</span>
+              <div class="seg-control compact" id="triagePresetSeg">
+                <button type="button" class="active" data-preset="default">平衡默认</button>
+                <button type="button" data-preset="conservative">零自动删信</button>
+                <button type="button" data-preset="job">求职优先</button>
+              </div>
+            </div>
+
+            <div class="config-box">
+              <div class="triage-row">
+                <div class="triage-name-col">
+                  <span class="triage-name">安全通知</span>
+                  <span class="triage-hint">登录提醒 · 验证码 · 授权</span>
+                </div>
+                <div class="triage-ctrl">
+                  <span class="quiet-tag">禁删</span>
+                  <div class="seg-control compact" data-pref-row="security">
+                    <button type="button" class="active" data-val="keep">待处理</button>
+                    <button type="button" data-val="archive">归档</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="triage-row">
+                <div class="triage-name-col">
+                  <span class="triage-name">留档记录</span>
+                  <span class="triage-hint">收据 · 账单回执 · 物流</span>
+                </div>
+                <div class="triage-ctrl">
+                  <span class="quiet-tag">禁删</span>
+                  <div class="seg-control compact" data-pref-row="fyi">
+                    <button type="button" data-val="keep">待处理</button>
+                    <button type="button" class="active" data-val="archive">归档</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="triage-row">
+                <div class="triage-name-col">
+                  <span class="triage-name">订阅资讯</span>
+                  <span class="triage-hint">Newsletter · 产品更新</span>
+                </div>
+                <div class="triage-ctrl">
+                  <div class="seg-control compact" data-pref-row="news">
+                    <button type="button" data-val="keep">待处理</button>
+                    <button type="button" class="active" data-val="archive">归档</button>
+                    <button type="button" data-val="trash">废纸篓</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="triage-row">
+                <div class="triage-name-col">
+                  <span class="triage-name">推销荐岗</span>
+                  <span class="triage-hint">陌生 B2B · 群发招聘</span>
+                </div>
+                <div class="triage-ctrl">
+                  <div class="seg-control compact" data-pref-row="pitch">
+                    <button type="button" data-val="keep">待处理</button>
+                    <button type="button" data-val="archive">归档</button>
+                    <button type="button" class="active" data-val="trash">废纸篓</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="triage-row">
+                <div class="triage-name-col">
+                  <span class="triage-name">社交社区</span>
+                  <span class="triage-hint">社交通知 · 公共邮件组</span>
+                </div>
+                <div class="triage-ctrl">
+                  <div class="seg-control compact" data-pref-row="social">
+                    <button type="button" data-val="keep">待处理</button>
+                    <button type="button" data-val="archive">归档</button>
+                    <button type="button" class="active" data-val="trash">废纸篓</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="triage-row">
+                <div class="triage-name-col">
+                  <span class="triage-name">商业促销</span>
+                  <span class="triage-hint">折扣 · 优惠券 · 推广</span>
+                </div>
+                <div class="triage-ctrl">
+                  <div class="seg-control compact" data-pref-row="marketing">
+                    <button type="button" data-val="keep">待处理</button>
+                    <button type="button" data-val="archive">归档</button>
+                    <button type="button" class="active" data-val="trash">废纸篓</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn primary" id="confirmTriageBtn">保存规则并继续</button>
+              <span class="inline-note">待回复、加星及工作/财务/安全会话受护栏保护，永不自动删除</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5: Silk Theme -->
+        <div class="step-card dimmed" id="step5Card">
+          <div class="step-head">
+            <span class="step-num" id="step5Num">5</span>
+            <div class="step-title-col">
+              <div class="step-title">选择视觉主题</div>
+              <div class="step-meta" id="step5Meta">影响列表焦点晕染与 Sift 品牌微标</div>
+            </div>
+            <div class="step-status" id="step5Status">
+              <span>默认 · 紫杏晨光</span>
+            </div>
+          </div>
+
+          <div class="step-detail hidden" id="step5Detail">
+            <div class="silk-grid" id="silkGrid">
+              <button type="button" class="silk-card selected" data-silk="apricot">
+                <div class="silk-preview">
+                  <div class="silk-mini-row">
+                    <div class="mini-bar" style="width:42%;"></div>
+                    <div class="mini-bar" style="width:74%;"></div>
+                  </div>
+                  <div class="silk-mini-selected apricot">
+                    <div class="mini-bar strong" style="width:46%;"></div>
+                    <div class="mini-bar sub" style="width:82%;"></div>
+                  </div>
+                </div>
+                <div class="silk-card-meta">
+                  <span class="silk-swatch apricot"></span>
+                  <span class="silk-card-title">紫杏晨光</span>
+                  <span class="quiet-tag">默认</span>
+                </div>
+              </button>
+
+              <button type="button" class="silk-card" data-silk="iris">
+                <div class="silk-preview">
+                  <div class="silk-mini-row">
+                    <div class="mini-bar" style="width:42%;"></div>
+                    <div class="mini-bar" style="width:74%;"></div>
+                  </div>
+                  <div class="silk-mini-selected iris">
+                    <div class="mini-bar strong" style="width:46%;"></div>
+                    <div class="mini-bar sub" style="width:82%;"></div>
+                  </div>
+                </div>
+                <div class="silk-card-meta">
+                  <span class="silk-swatch iris"></span>
+                  <span class="silk-card-title">鸢尾冰蓝</span>
+                </div>
+              </button>
+
+              <button type="button" class="silk-card" data-silk="peach">
+                <div class="silk-preview">
+                  <div class="silk-mini-row">
+                    <div class="mini-bar" style="width:42%;"></div>
+                    <div class="mini-bar" style="width:74%;"></div>
+                  </div>
+                  <div class="silk-mini-selected peach">
+                    <div class="mini-bar strong" style="width:46%;"></div>
+                    <div class="mini-bar sub" style="width:82%;"></div>
+                  </div>
+                </div>
+                <div class="silk-card-meta">
+                  <span class="silk-swatch peach"></span>
+                  <span class="silk-card-title">暖桃暮金</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer hidden" id="cardFooter">
+        <div class="poll-status" id="footerStatus"></div>
+        <button class="btn primary hidden" id="enterInboxBtn">进入收件箱</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 演示模式三栏工作台 -->
+  <div class="workspace-shell hidden" id="workspaceStage">
+    <div class="sidebar">
+      <div class="sidebar-brand">
+        <div class="silk-logo"></div>
+        <span>Sift</span>
+      </div>
+
+      <div class="sidebar-nav">
+        <div class="nav-group-label">待你拍板</div>
+        <div class="nav-item active"><span>全部待处理</span><span class="mono">5</span></div>
+        <div class="nav-item"><span>真人来信</span><span class="mono">1</span></div>
+        <div class="nav-item"><span>合同 · 账单 · 条款</span><span class="mono">3</span></div>
+        <div class="nav-item"><span>待你拍板</span><span class="mono">1</span></div>
+        <div class="nav-group-label" style="margin-top:10px">已分拣</div>
+        <div class="nav-item"><span>重要保留</span><span class="mono">0</span></div>
+        <div class="nav-item"><span>已自动归档</span><span class="mono">4</span></div>
+        <div class="nav-item"><span>废纸篓</span><span class="mono">6</span></div>
+      </div>
+
+      <!-- 侧栏常驻演示模式入口 -->
+      <div class="demo-sidebar-card">
+        <div class="demo-sidebar-top">
+          <span class="left"><span class="dot amber"></span>演示模式</span>
+          <span style="font-size:10.5px; color:var(--ink3)">未连接本机</span>
+        </div>
+        <div class="demo-sidebar-sub">当前展示内置示例邮件，分拣操作不会影响本机邮箱。</div>
+        <button class="demo-connect-btn" id="backToOnboardingBtn">连接 Apple Mail</button>
+      </div>
+    </div>
+
+    <div class="mail-list">
+      <div class="pane-top">全部待处理 <span class="mono" style="color:var(--ink3); font-weight:400">5</span></div>
+      <div class="mail-card-item active">
+        <div class="sender"><span class="dot cobalt"></span>林晓 · 工作</div>
+        <div class="subj">周四下午能一起过下 Q1 定价页改版吗？</div>
+        <div class="snip">你回我哪个时段方便就好，我来发会议邀请。</div>
+      </div>
+      <div class="mail-card-item">
+        <div class="sender"><span class="dot sage"></span>Driftbox 团队 · 个人</div>
+        <div class="subj">Driftbox 秋季产品周报：协作白板、离线模式与更多</div>
+        <div class="snip">自 2026 年 12 月 15 日起，免费版的存储空间将从 10 GB 调整为 2 GB。</div>
+      </div>
+      <div class="mail-card-item">
+        <div class="sender"><span class="dot cobalt"></span>周律师 · 恒致律所 · 工作</div>
+        <div class="subj">【待确认】2027 年度设计服务合同（第三版）</div>
+        <div class="snip">第 7.2 条对您现金流有一定影响，建议争取首付 35%。</div>
+      </div>
+    </div>
+
+    <div class="reading-pane">
+      <div class="floating-toolbar">
+        <div class="glass-pill mono">1 / 5</div>
+        <div class="glass-pill clickable" id="topPillConnect">
+          <span class="dot amber"></span>
+          <span>演示模式</span>
+          <span style="color:var(--ink3)">·</span>
+          <span class="action-chip">连接 Apple Mail →</span>
+        </div>
+        <div style="margin-left:auto; display:flex; gap:8px;">
+          <div class="glass-pill">归档 · 保留 · 推广</div>
+          <div class="glass-pill">Apple Mail ↗</div>
+        </div>
+      </div>
+
+      <div class="reading-article">
+        <h2>周四下午能一起过下 Q1 定价页改版吗？</h2>
+        <p>
+          嗨，<br><br>
+          上周你提的「把年付折扣做成默认选项」我跟 Mia 聊过了，她觉得可以先在定价页上做个 A/B。想约你半小时一起过一下新的线框稿，顺便定一下文案口径：<br><br>
+          - 周四 15:00–15:30<br>
+          - 或者周五 10:00 之后都行<br><br>
+          你回我哪个时段方便就好，我来发会议邀请。
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const root = document.documentElement;
+  const themeButtons = document.querySelectorAll('#themeSeg button');
+  const sceneButtons = document.querySelectorAll('#scenarioSeg button');
+
+  function setTheme(theme) {
+    if (theme === 'dark') root.setAttribute('data-theme', 'dark');
+    else root.removeAttribute('data-theme');
+    themeButtons.forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
+  }
+
+  themeButtons.forEach(btn => btn.addEventListener('click', () => setTheme(btn.dataset.theme)));
+  document.getElementById('quickThemeBtn').addEventListener('click', () => {
+    setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  const SILK_LABELS = {
+    apricot: '紫杏晨光',
+    iris: '鸢尾冰蓝',
+    peach: '暖桃暮金'
+  };
+  let activeSilk = 'apricot';
+
+  const TRIAGE_PRESETS = {
+    default: {
+      label: '平衡默认',
+      prefs: { security: 'keep', fyi: 'archive', news: 'archive', pitch: 'trash', social: 'trash', marketing: 'trash' }
+    },
+    conservative: {
+      label: '零自动删信',
+      prefs: { security: 'keep', fyi: 'archive', news: 'archive', pitch: 'archive', social: 'archive', marketing: 'archive' }
+    },
+    job: {
+      label: '求职优先',
+      prefs: { security: 'keep', fyi: 'archive', news: 'archive', pitch: 'keep', social: 'trash', marketing: 'trash' }
+    }
+  };
+  let triagePrefs = { ...TRIAGE_PRESETS.default.prefs };
+  let activeTriagePreset = 'default';
+
+  function summarizeTriagePrefs() {
+    const vals = Object.values(triagePrefs);
+    const keepCount = vals.filter(v => v === 'keep').length;
+    const archiveCount = vals.filter(v => v === 'archive').length;
+    const trashCount = vals.filter(v => v === 'trash').length;
+    const prefix = activeTriagePreset ? TRIAGE_PRESETS[activeTriagePreset].label : '自定义规则';
+    return `${prefix} · 待处理 ${keepCount} · 归档 ${archiveCount} · 废纸篓 ${trashCount}`;
+  }
+
+  function renderScene(scene) {
+    sceneButtons.forEach(b => b.classList.toggle('active', b.dataset.scene === scene));
+
+    const onboardingStage = document.getElementById('onboardingStage');
+    const workspaceStage = document.getElementById('workspaceStage');
+    const dmgGuard = document.getElementById('dmgGuard');
+    const noMailGuard = document.getElementById('noMailGuard');
+    const stepsBody = document.getElementById('stepsBody');
+    const step1Card = document.getElementById('step1Card');
+    const step1Num = document.getElementById('step1Num');
+    const step1Meta = document.getElementById('step1Meta');
+    const step1Status = document.getElementById('step1Status');
+    const step1Detail = document.getElementById('step1Detail');
+    const relaunchBtn = document.getElementById('relaunchBtn');
+    const fdaNote = document.getElementById('fdaNote');
+
+    const step2Card = document.getElementById('step2Card');
+    const step2Num = document.getElementById('step2Num');
+    const step2Status = document.getElementById('step2Status');
+    const step2Detail = document.getElementById('step2Detail');
+    const askAutoBtn = document.getElementById('askAutoBtn');
+    const openAutoSettingsBtn = document.getElementById('openAutoSettingsBtn');
+    const recheckAutoBtn = document.getElementById('recheckAutoBtn');
+    const step2Note = document.getElementById('step2Note');
+    const detectedAccounts = document.getElementById('detectedAccounts');
+
+    const step3Card = document.getElementById('step3Card');
+    const step3Num = document.getElementById('step3Num');
+    const step3Meta = document.getElementById('step3Meta');
+    const step3Status = document.getElementById('step3Status');
+    const step3Detail = document.getElementById('step3Detail');
+    const step3Note = document.getElementById('step3Note');
+
+    const step4Card = document.getElementById('step4Card');
+    const step4Num = document.getElementById('step4Num');
+    const step4Meta = document.getElementById('step4Meta');
+    const step4Status = document.getElementById('step4Status');
+    const step4Detail = document.getElementById('step4Detail');
+
+    const step5Card = document.getElementById('step5Card');
+    const step5Num = document.getElementById('step5Num');
+    const step5Status = document.getElementById('step5Status');
+    const step5Detail = document.getElementById('step5Detail');
+
+    const cardFooter = document.getElementById('cardFooter');
+    const footerStatus = document.getElementById('footerStatus');
+    const enterInboxBtn = document.getElementById('enterInboxBtn');
+    const headerBadge = document.getElementById('headerBadge');
+
+    if (scene === 'demo-workspace') {
+      onboardingStage.classList.add('hidden');
+      workspaceStage.classList.remove('hidden');
+      return;
+    }
+
+    onboardingStage.classList.remove('hidden');
+    workspaceStage.classList.add('hidden');
+
+    dmgGuard.classList.add('hidden');
+    noMailGuard.classList.add('hidden');
+    stepsBody.classList.remove('hidden');
+    relaunchBtn.classList.add('hidden');
+    cardFooter.classList.add('hidden');
+    footerStatus.innerHTML = '';
+    enterInboxBtn.classList.add('hidden');
+    headerBadge.classList.add('hidden');
+    headerBadge.textContent = '';
+
+    // 默认复位 Step 1 / 2 / 3 / 4 / 5
+    step1Card.className = 'step-card active';
+    step1Num.className = 'step-num';
+    step1Num.textContent = '1';
+    step1Meta.textContent = '只读读取 ~/Library/Mail 收件箱索引与正文';
+    step1Status.innerHTML = '<span class="dot amber"></span><span>待授权</span>';
+    step1Detail.classList.remove('hidden');
+    fdaNote.classList.add('hidden');
+    fdaNote.querySelector('span').textContent = '';
+
+    step2Card.className = 'step-card dimmed';
+    step2Num.className = 'step-num';
+    step2Num.textContent = '2';
+    step2Status.innerHTML = '<span>等待第 1 步</span>';
+    step2Detail.classList.add('hidden');
+    step2Note.classList.remove('hidden');
+    askAutoBtn.classList.remove('hidden');
+    openAutoSettingsBtn.classList.add('hidden');
+    recheckAutoBtn.classList.add('hidden');
+    detectedAccounts.classList.remove('hidden');
+
+    step3Card.className = 'step-card dimmed';
+    step3Num.className = 'step-num';
+    step3Num.textContent = '3';
+    step3Meta.textContent = '支持 Gemini、OpenAI、Jev 或任意 System 1 兼容端点';
+    step3Status.innerHTML = '<span>等待前面步骤</span>';
+    step3Detail.classList.add('hidden');
+    step3Note.classList.add('hidden');
+    step3Note.innerHTML = '';
+
+    step4Card.className = 'step-card dimmed';
+    step4Num.className = 'step-num';
+    step4Num.textContent = '4';
+    step4Meta.textContent = '配置 6 类来信的默认去向（受系统安全护栏保护）';
+    step4Status.innerHTML = '<span>等待前面步骤</span>';
+    step4Detail.classList.add('hidden');
+
+    step5Card.className = 'step-card dimmed';
+    step5Num.className = 'step-num';
+    step5Num.textContent = '5';
+    step5Status.innerHTML = `<span>默认 · ${SILK_LABELS[activeSilk]}</span>`;
+    step5Detail.classList.add('hidden');
+
+    if (scene === 'dmg') {
+      dmgGuard.classList.remove('hidden');
+      step1Card.className = 'step-card dimmed';
+      step1Detail.classList.add('hidden');
+      headerBadge.classList.remove('hidden');
+      headerBadge.textContent = '需先安装到应用程序';
+      cardFooter.classList.remove('hidden');
+      footerStatus.innerHTML = '<span>移入应用程序后继续</span>';
+    } else if (scene === 'step1-relaunch') {
+      relaunchBtn.classList.remove('hidden');
+      fdaNote.classList.remove('hidden');
+      fdaNote.querySelector('span').textContent = '已开启开关但未生效？可能是旧版同名条目干扰或系统尚未刷新，可先移除旧条目或重启 Sift。';
+      cardFooter.classList.remove('hidden');
+      footerStatus.innerHTML = '<span class="pulse"></span><span>等待权限生效…</span>';
+    } else if (scene === 'no-mail') {
+      noMailGuard.classList.remove('hidden');
+      step1Card.className = 'step-card';
+      step1Num.className = 'step-num done';
+      step1Num.textContent = '✓';
+      step1Status.innerHTML = '<span class="dot sage"></span><span>磁盘权限已就绪</span>';
+      step1Detail.classList.add('hidden');
+      step2Card.className = 'step-card dimmed';
+      step2Status.innerHTML = '<span>等待配置邮箱</span>';
+      headerBadge.classList.remove('hidden');
+      headerBadge.textContent = '等待邮箱初始化';
+      cardFooter.classList.remove('hidden');
+      footerStatus.innerHTML = '<span class="pulse"></span><span>打开「邮件」登录后将自动接入…</span>';
+    } else if (
+      scene === 'step2-pending' ||
+      scene === 'step2-denied' ||
+      scene === 'step3-pending' ||
+      scene === 'step4-triage' ||
+      scene === 'ready'
+    ) {
+      step1Card.className = 'step-card';
+      step1Num.className = 'step-num done';
+      step1Num.textContent = '✓';
+      step1Meta.textContent = '已连接到 ~/Library/Mail/V10 · 识别 2 个邮箱账户';
+      step1Status.innerHTML = '<span class="dot sage"></span><span>已就绪</span>';
+      step1Detail.classList.add('hidden');
+
+      if (scene === 'step2-pending' || scene === 'step2-denied') {
+        step2Card.className = 'step-card active';
+        step2Detail.classList.remove('hidden');
+
+        if (scene === 'step2-pending') {
+          step2Status.innerHTML = '<span class="dot amber"></span><span>待授权</span>';
+          step2Note.querySelector('span').textContent = '点击后将轻声唤醒 Apple Mail 并弹出系统确认框。';
+        } else {
+          step2Status.innerHTML = '<span class="dot coral"></span><span>已拒绝</span>';
+          askAutoBtn.classList.add('hidden');
+          openAutoSettingsBtn.classList.remove('hidden');
+          recheckAutoBtn.classList.remove('hidden');
+          step2Note.querySelector('span').textContent = '此前曾拒绝控制「邮件」，请在「系统设置 → 隐私与安全性 → 自动化」中开启 Sift。';
+        }
+      } else {
+        step2Card.className = 'step-card';
+        step2Num.className = 'step-num done';
+        step2Num.textContent = '✓';
+        step2Status.innerHTML = '<span class="dot sage"></span><span>已授权</span>';
+
+        if (scene === 'step3-pending') {
+          step3Card.className = 'step-card active';
+          step3Status.innerHTML = '<span class="dot amber"></span><span>待配置</span>';
+          step3Detail.classList.remove('hidden');
+        } else {
+          const providerLabel = activeProviderBtn ? activeProviderBtn.textContent : 'Gemini';
+          const modelVal = (modelNameInput.value || 'gemini-decision-1').trim();
+          step3Card.className = 'step-card';
+          step3Num.className = 'step-num done';
+          step3Num.textContent = '✓';
+          step3Meta.textContent = `已连通 · ${providerLabel} · ${modelVal}`;
+          step3Status.innerHTML = '<span class="dot sage"></span><span>已连通</span>';
+
+          if (scene === 'step4-triage') {
+            step4Card.className = 'step-card active';
+            step4Status.innerHTML = '<span class="dot amber"></span><span>待确认</span>';
+            step4Detail.classList.remove('hidden');
+          } else if (scene === 'ready') {
+            step4Card.className = 'step-card';
+            step4Num.className = 'step-num done';
+            step4Num.textContent = '✓';
+            step4Meta.textContent = summarizeTriagePrefs();
+            step4Status.innerHTML = '<span class="dot sage"></span><span>已设定</span>';
+
+            step5Card.className = 'step-card active';
+            step5Status.innerHTML = `<span class="dot sage"></span><span>${SILK_LABELS[activeSilk]}</span>`;
+            step5Detail.classList.remove('hidden');
+
+            cardFooter.classList.remove('hidden');
+            footerStatus.innerHTML = '<span class="dot sage"></span><span>已完成全部配置</span>';
+            enterInboxBtn.classList.remove('hidden');
+            headerBadge.classList.remove('hidden');
+            headerBadge.textContent = '准备就绪';
+          }
+        }
+      }
+    }
+  }
+
+  const silkCards = document.querySelectorAll('#silkGrid .silk-card');
+
+  function setSilkTheme(silk) {
+    activeSilk = silk;
+    if (silk === 'apricot') root.removeAttribute('data-silk');
+    else root.setAttribute('data-silk', silk);
+    silkCards.forEach(card => card.classList.toggle('selected', card.dataset.silk === silk));
+    const step5Status = document.getElementById('step5Status');
+    const isReadyScene = !document.getElementById('step5Detail').classList.contains('hidden');
+    step5Status.innerHTML = isReadyScene
+      ? `<span class="dot sage"></span><span>${SILK_LABELS[silk]}</span>`
+      : `<span>默认 · ${SILK_LABELS[silk]}</span>`;
+  }
+
+  silkCards.forEach(card => card.addEventListener('click', () => setSilkTheme(card.dataset.silk)));
+
+  const triagePresetButtons = document.querySelectorAll('#triagePresetSeg button');
+  const triageRowGroups = document.querySelectorAll('[data-pref-row]');
+
+  function syncTriageUI() {
+    triageRowGroups.forEach(group => {
+      const cat = group.dataset.prefRow;
+      const val = triagePrefs[cat];
+      group.querySelectorAll('button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.val === val);
+      });
+    });
+
+    activeTriagePreset = null;
+    for (const [key, preset] of Object.entries(TRIAGE_PRESETS)) {
+      const matched = Object.keys(preset.prefs).every(cat => triagePrefs[cat] === preset.prefs[cat]);
+      if (matched) {
+        activeTriagePreset = key;
+        break;
+      }
+    }
+    triagePresetButtons.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.preset === activeTriagePreset);
+    });
+  }
+
+  triagePresetButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const preset = TRIAGE_PRESETS[btn.dataset.preset];
+      if (!preset) return;
+      triagePrefs = { ...preset.prefs };
+      syncTriageUI();
+    });
+  });
+
+  triageRowGroups.forEach(group => {
+    const cat = group.dataset.prefRow;
+    group.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        triagePrefs[cat] = btn.dataset.val;
+        syncTriageUI();
+      });
+    });
+  });
+
+  const PROVIDER_PRESETS = {
+    gemini: {
+      model: 'gemini-decision-1',
+      endpoint: 'https://generativelanguage.googleapis.com/v1beta/decisions',
+      keyPlaceholder: '输入 Gemini API Key（AIza...）',
+      requireKey: true
+    },
+    openai: {
+      model: 'gpt-4o-mini',
+      endpoint: 'https://api.openai.com/v1',
+      keyPlaceholder: '输入 OpenAI API Key（sk-...）',
+      requireKey: true
+    },
+    claude: {
+      model: 'claude-haiku-4-5',
+      endpoint: 'https://api.anthropic.com/v1',
+      keyPlaceholder: '输入 Anthropic API Key（sk-ant-...）',
+      requireKey: true
+    },
+    custom: {
+      model: 'jev-decision-1',
+      endpoint: 'https://your-gateway.example.com/v1',
+      keyPlaceholder: '输入密钥（本机 Ollama 可留空）',
+      requireKey: false
+    }
+  };
+
+  let activeProvider = 'gemini';
+  const providerButtons = document.querySelectorAll('#providerSeg button');
+  let activeProviderBtn = document.querySelector('#providerSeg button.active');
+  const modelNameInput = document.getElementById('modelNameInput');
+  const modelEndpointInput = document.getElementById('modelEndpointInput');
+  const apiKeyInput = document.getElementById('apiKeyInput');
+  const toggleApiKeyBtn = document.getElementById('toggleApiKeyBtn');
+
+  providerButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeProvider = btn.dataset.provider;
+      activeProviderBtn = btn;
+      providerButtons.forEach(b => b.classList.toggle('active', b === btn));
+      const preset = PROVIDER_PRESETS[activeProvider];
+      modelNameInput.value = preset.model;
+      modelEndpointInput.value = preset.endpoint;
+      apiKeyInput.placeholder = preset.keyPlaceholder;
+      const step3Note = document.getElementById('step3Note');
+      step3Note.classList.add('hidden');
+      step3Note.innerHTML = '';
+    });
+  });
+
+  toggleApiKeyBtn.addEventListener('click', () => {
+    const isPassword = apiKeyInput.type === 'password';
+    apiKeyInput.type = isPassword ? 'text' : 'password';
+    toggleApiKeyBtn.textContent = isPassword ? '隐藏' : '显示';
+  });
+
+  document.getElementById('testModelBtn').addEventListener('click', () => {
+    const step3Note = document.getElementById('step3Note');
+    const preset = PROVIDER_PRESETS[activeProvider];
+    const hasModel = modelNameInput.value.trim().length > 0;
+    const hasEndpoint = modelEndpointInput.value.trim().length > 0;
+    const hasKey = apiKeyInput.value.trim().length > 0;
+
+    if (!hasModel || !hasEndpoint || (preset.requireKey && !hasKey)) {
+      step3Note.classList.remove('hidden');
+      step3Note.innerHTML = '<span class="dot coral"></span><span>请补全 Model、Endpoint 与 API Key 后再测试连接。</span>';
+      return;
+    }
+
+    step3Note.classList.add('hidden');
+    step3Note.innerHTML = '';
+    renderScene('step4-triage');
+  });
+
+  document.getElementById('confirmTriageBtn').addEventListener('click', () => renderScene('ready'));
+  sceneButtons.forEach(btn => btn.addEventListener('click', () => renderScene(btn.dataset.scene)));
+  document.getElementById('dmgMoveBtn').addEventListener('click', () => renderScene('step1'));
+  document.getElementById('openFdaBtn').addEventListener('click', () => renderScene('step1-relaunch'));
+  document.getElementById('relaunchBtn').addEventListener('click', () => renderScene('step2-pending'));
+  document.getElementById('askAutoBtn').addEventListener('click', () => renderScene('step3-pending'));
+  document.getElementById('recheckAutoBtn').addEventListener('click', () => renderScene('step3-pending'));
+  document.getElementById('recheckNoMailBtn').addEventListener('click', () => renderScene('step2-pending'));
+  document.getElementById('backToOnboardingBtn').addEventListener('click', () => renderScene('step1'));
+  document.getElementById('topPillConnect').addEventListener('click', () => renderScene('step1'));
+</script>
+</body>
+</html>
