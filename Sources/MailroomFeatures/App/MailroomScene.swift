@@ -13,7 +13,7 @@ public struct MailroomScene: Scene {
     private var model: RootViewModel { RootViewModel(app: app) }
 
     public var body: some Scene {
-        WindowGroup("Mailroom Deck") {
+        WindowGroup("Sift") {
             RootThemeHostView(model: model)
                 .preferredColorScheme(model.preferredColorScheme)
                 .frame(minWidth: 880, minHeight: 560)

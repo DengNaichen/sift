@@ -1,16 +1,16 @@
-# Mailroom Deck — Settings 页面设计蓝图
+# Sift — Settings 页面设计蓝图
 
-延续 Mailroom Deck 的 **Linear 式建筑感中性灰阶 + 内嵌白纸工作台** 语言，Settings 不做脱离上下文的独立弹窗，而是在当前主窗口内完成「分拣台 ↔ 设置台」的原地切换，每一项配置都围绕**「建立自动分拣信任感」**与**「打磨日常键盘流手感」**展开。
+延续 Sift 的 **Linear 式建筑感中性灰阶 + 内嵌白纸工作台** 语言，Settings 不做脱离上下文的独立弹窗，而是在当前主窗口内完成「分拣台 ↔ 设置台」的原地切换，每一项配置都围绕**「建立自动分拣信任感」**与**「打磨日常键盘流手感」**展开。
 
 ---
 
 ## 1. 空间承载与进出动效（Linear 式内嵌工作台）
 
-触发 `⌘,`、点击左侧边栏左下角齿轮（[SidebarView.swift](file:///Users/nd/Developer/mailroom-deck/Sources/MailroomApp/Views/SidebarView.swift#L152-L192)），或在 `⌘K` 命令面板搜索任意设置项时，主窗口保持外框与 6pt 内嵌白纸结构不变（[MailroomApp.swift](file:///Users/nd/Developer/mailroom-deck/Sources/MailroomApp/MailroomApp.swift#L61-L78)）：
+触发 `⌘,`、点击左侧边栏左下角齿轮（[SidebarView.swift](../../Sources/MailroomFeatures/Features/Sidebar/SidebarView.swift)），或在 `⌘K` 命令面板搜索任意设置项时，主窗口保持外框与 6pt 内嵌白纸结构不变（[MailroomScene.swift](../../Sources/MailroomFeatures/App/MailroomScene.swift)）：
 
 ```mermaid
 flowchart LR
-    subgraph Window["Mailroom 主窗口 (p.canvas 画布)"]
+    subgraph Window["Sift 主窗口 (p.canvas 画布)"]
         direction LR
         subgraph LeftNav["左侧导航栏 206pt"]
             BackBtn["← 返回收件箱 (esc)"]
@@ -30,7 +30,7 @@ flowchart LR
 ### 键盘流与交互细节
 - **原地进出**：`⌘,` 随时在「收件箱 ↔ 设置（记住上次停留的分组）」之间切换；在设置页内未聚焦文本输入框时，按 `Esc` 立即回到刚才那封邮件的焦点位置。
 - **侧栏收起兼容**：即便用户在分拣时按 `[` 收起了左侧边栏，进入 Settings 时临时展开左侧 `206pt` 设置导航，退出 Settings 后自动恢复原先的侧栏收起/展开状态。
-- **`⌘K` 深链直达**：把高频设置注册进 [DeckViewModel.swift](file:///Users/nd/Developer/mailroom-deck/Sources/MailroomApp/ViewModel/DeckViewModel.swift#L444-L595) 的 `paletteCommands`（如搜 `API Key`、`主题`、`缓存`、`推广`、`权限` 直接打开 Settings 并滚到对应分组）。
+- **`⌘K` 深链直达**：把高频设置注册进 [DeckViewModel.swift](../../Sources/MailroomFeatures/App/AppModel.swift) 的 `paletteCommands`（如搜 `API Key`、`主题`、`缓存`、`推广`、`权限` 直接打开 Settings 并滚到对应分组）。
 - **即时生效（Zero Save Buttons）**：除 API Key 编辑与危险重置外，所有开关、滑块、策略切换均实时持久化并驱动工作台状态刷新，不设「保存 / 取消」底栏。
 
 > [!TIP]
@@ -45,15 +45,15 @@ flowchart LR
 
 | 区块 | 控件与视觉表达 | 对接底层能力 |
 | --- | --- | --- |
-| **双权限健康状态卡** | 顶部 `p.sunken` 圆角卡，分两行展示：<br>1. **完全磁盘访问（只读同步索引）**：绿点 `已就绪 (~/Library/Mail/V10)` 或琥珀点 + `打开系统设置` / `重新检测`<br>2. **控制「邮件」自动化（写回归档与删除）**：显示授权状态 + `测试连接` 轻量按钮（提前触发系统授权，避免首次按 `Space` 才报错） | [AppleMailAdapter.swift](file:///Users/nd/Developer/mailroom-deck/Sources/MailroomCore/MailBridge/AppleMailAdapter.swift#L35-L55) + `AppleMailScriptRunner` |
-| **已识别邮箱账户** | 列表展示每个系统邮箱账户：<br>• **参与分拣开关**（关闭后从侧栏和队列隐藏）<br>• **色点选择器**（点击小圆点切换 Cobalt / Sage / Amber / Coral 强调色）<br>• **侧栏短名称内联编辑**（如 `工作` / `个人`）+ 邮箱地址副标题<br>• **只读落点透明行**：如 `Gmail 标签语义 · 归档 → [Gmail]/All Mail · 废纸篓 → [Gmail]/Trash` | `Accounts4.sqlite` + [AccountDiagnostic](file:///Users/nd/Developer/mailroom-deck/Sources/MailroomCore/MailBridge/EvalSampleExporter.swift#L79-L90) |
-| **本人发件别名** | 胶囊标签输入框（Tag Input）：置灰展示系统主邮箱，支持输入转发别名（如学校/公司别名回车生成胶囊）。副文案说明*「本人参与过的线程受硬护栏保护，绝不自动删除」* | [AppleMailAdapter.swift](file:///Users/nd/Developer/mailroom-deck/Sources/MailroomCore/MailBridge/AppleMailAdapter.swift#L130) `ownerAddresses` |
+| **双权限健康状态卡** | 顶部 `p.sunken` 圆角卡，分两行展示：<br>1. **完全磁盘访问（只读同步索引）**：绿点 `已就绪 (~/Library/Mail/V10)` 或琥珀点 + `打开系统设置` / `重新检测`<br>2. **控制「邮件」自动化（写回归档与删除）**：显示授权状态 + `测试连接` 轻量按钮（提前触发系统授权，避免首次按 `Space` 才报错） | [AppleMailAdapter.swift](../../Sources/MailroomCore/MailBridge/AppleMailAdapter.swift) + `AppleMailScriptRunner` |
+| **已识别邮箱账户** | 列表展示每个系统邮箱账户：<br>• **参与分拣开关**（关闭后从侧栏和队列隐藏）<br>• **色点选择器**（点击小圆点切换 Cobalt / Sage / Amber / Coral 强调色）<br>• **侧栏短名称内联编辑**（如 `工作` / `个人`）+ 邮箱地址副标题<br>• **只读落点透明行**：如 `Gmail 标签语义 · 归档 → [Gmail]/All Mail · 废纸篓 → [Gmail]/Trash` | `Accounts4.sqlite` + [AccountDiagnostic](../../Sources/MailroomCore/MailBridge/EvalSampleExporter.swift) |
+| **本人发件别名** | 胶囊标签输入框（Tag Input）：置灰展示系统主邮箱，支持输入转发别名（如学校/公司别名回车生成胶囊）。副文案说明*「本人参与过的线程受硬护栏保护，绝不自动删除」* | [AppleMailAdapter.swift](../../Sources/MailroomCore/MailBridge/AppleMailAdapter.swift) `ownerAddresses` |
 | **数据源与扫描范围** | • 数据源切换：`Apple Mail 真机收件箱` / `内置演示数据（Demo）`<br>• 单次拉取收件箱上限：`50 / 100（默认）/ 200 / 500 封` 分段选择 | `DeckViewModel.sourceMode` + `maxInboxFetch` |
 
 ---
 
 ### ② 分拣与护栏（Triage & Guardrails）
-把目前 [MailClassifier.swift](file:///Users/nd/Developer/mailroom-deck/Sources/MailroomCore/Classifier/MailClassifier.swift#L226-L299) 硬编码的处置行为交给用户拍板。
+把目前 [MailClassifier.swift](../../Sources/MailroomCore/Classifier/MailClassifier.swift) 硬编码的处置行为交给用户拍板。
 
 - **自动分拣处置矩阵（6 类邮件 × 三段式胶囊选择器）**
   每行左侧为类别名与简短示例，右侧为紧凑分段控件 **`待处理` | `自动归档` | `废纸篓`**：
@@ -72,7 +72,7 @@ flowchart LR
 ---
 
 ### ③ AI 分类引擎（AI Classifier）
-围绕 [MailClassifier](file:///Users/nd/Developer/mailroom-deck/Sources/MailroomCore/Classifier/MailClassifier.swift#L60-L62) 协议与现有的低确信度视觉体系（[DeckTheme.swift](file:///Users/nd/Developer/mailroom-deck/Sources/MailroomApp/Theme/DeckTheme.swift#L146) `< 90%` 虚线胶囊）设计。
+围绕 [MailClassifier](../../Sources/MailroomCore/Classifier/MailClassifier.swift) 协议与现有的低确信度视觉体系（[DeckTheme.swift](../../Sources/MailroomFeatures/DesignSystem/DeckTheme.swift) `< 90%` 虚线胶囊）设计。
 
 > [!IMPORTANT]
 > 个人邮件极其敏感：API Key 必须走 **macOS Keychain** 存储（绝不落盘明文 `UserDefaults`），且界面上要明确交代「发给模型的数据边界」。
@@ -99,7 +99,7 @@ flowchart LR
 
 ### ④ 阅读与外观（Reading & Appearance）
 - **主题外观三态预览卡**
-  - 扩展 [DeckTheme.swift](file:///Users/nd/Developer/mailroom-deck/Sources/MailroomApp/Theme/DeckTheme.swift#L4-L7) 为 `system` / `light` / `dark`：三张微缩纸页示意图（左半浅色右半深色的「跟随系统」、浅色纸页、深色丝绒，选中态带紫杏晨光微光描边）。
+  - 扩展 [DeckTheme.swift](../../Sources/MailroomFeatures/DesignSystem/DeckTheme.swift) 为 `system` / `light` / `dark`：三张微缩纸页示意图（左半浅色右半深色的「跟随系统」、浅色纸页、深色丝绒，选中态带紫杏晨光微光描边）。
 - **阅读器默认行为**
   - **默认正文渲染**：`富文本原版排版` / `纯文本精简视图`（持久化 `preferPlainText`）
   - **外部远程图片**：`默认拦截以防追踪像素（单封可点显示）` / `始终加载远程图片`
@@ -112,7 +112,7 @@ flowchart LR
 - **键盘流速查卡片（只读）**
   - 分「焦点与导航」「拍板与撤销」「全局视图」三组，直接复用 `KbdView` 键帽组件，双列紧凑排布。
 - **Bridge 健康诊断与本地缓存**
-  - 内嵌精简版 [BridgeDoctorReport](file:///Users/nd/Developer/mailroom-deck/Sources/MailroomCore/MailBridge/EvalSampleExporter.swift#L48-L90) 指标卡：
+  - 内嵌精简版 [BridgeDoctorReport](../../Sources/MailroomCore/MailBridge/EvalSampleExporter.swift) 指标卡：
     - `Envelope Index WAL 模式` · `.emlx 解析命中率` · `同步账本状态（待结算 / 失败数）` · `本地缓存体积`
   - 操作按钮行：
     - `重建本地解析缓存`（清空 `parsed_emlx_v3` 重跑解析，不触碰 Apple Mail 原邮件）
@@ -130,4 +130,4 @@ flowchart LR
 - **零自明解释文案（Zero Redundant Copy）**：
   - 页标题下方不写导语段落，分组小标题右侧不挂提示副标，顶栏不写「自动生效」口号。
   - 凡标题本身含义自明的设置项（如默认正文格式、远程图片、单次同步上限、Endpoint、模型名、6 类分拣项），一律做成**干净的单行 `44pt` 行高**，不加冗余副文案；仅在确需交代边界处保留一行极简底注。
-- **字号与容器**：页标题 `17.5pt semibold`（`p.ink`）→ 分组标题 `11.5pt medium`（`p.ink3`）→ 设置项主文案 `13pt regular`（`p.ink`）→ 数值/路径 `11.5pt monospaced`；左下角 [SidebarView.swift](file:///Users/nd/Developer/mailroom-deck/Sources/MailroomApp/Views/SidebarView.swift#L183-L189) 状态栏加入 `gearshape` 入口按钮（`⌘,`）。
+- **字号与容器**：页标题 `17.5pt semibold`（`p.ink`）→ 分组标题 `11.5pt medium`（`p.ink3`）→ 设置项主文案 `13pt regular`（`p.ink`）→ 数值/路径 `11.5pt monospaced`；左下角 [SidebarView.swift](../../Sources/MailroomFeatures/Features/Sidebar/SidebarView.swift) 状态栏加入 `gearshape` 入口按钮（`⌘,`）。
