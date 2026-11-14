@@ -21,7 +21,6 @@ settingsAccounts=work:工作:cobalt:[Gmail]/All Mail,personal:个人:sage:Archiv
 [hud]
 J+K|切换|disabled=false
 R|拉回待处理|disabled=false
-I|判据|disabled=false
 ↵|Mail|disabled=false
 Z|撤销|disabled=false
 ⌘K|命令|disabled=false

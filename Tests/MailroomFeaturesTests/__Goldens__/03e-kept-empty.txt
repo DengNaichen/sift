@@ -20,9 +20,7 @@ source=demo access=fullDiskAccessRequired(expectedPath: "/Users/test/Library/Mai
 settingsAccounts=work:工作:cobalt:[Gmail]/All Mail,personal:个人:sage:Archive
 [hud]
 J+K|切换|disabled=true
-I|判据|disabled=true
 ↵|Mail|disabled=true
-Z|撤销|disabled=true
 ⌘K|命令|disabled=false
 [palette]
 acc-all|邮箱范围|查看全部邮箱|-|-|tray|account all 全部邮箱

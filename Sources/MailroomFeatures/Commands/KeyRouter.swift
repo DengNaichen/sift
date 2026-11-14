@@ -31,13 +31,21 @@ public struct KeyContext: Equatable, Sendable {
 
     public var paletteOpen: Bool
     public var settingsOpen: Bool
+    public var sidebarPeeking: Bool
     /// 第一响应者是否为可编辑文本视图（搜索框、拼音候选等）
     public var isEditingText: Bool
     public var activeRow: RowKind
 
-    public init(paletteOpen: Bool, settingsOpen: Bool, isEditingText: Bool, activeRow: RowKind) {
+    public init(
+        paletteOpen: Bool,
+        settingsOpen: Bool,
+        sidebarPeeking: Bool = false,
+        isEditingText: Bool,
+        activeRow: RowKind
+    ) {
         self.paletteOpen = paletteOpen
         self.settingsOpen = settingsOpen
+        self.sidebarPeeking = sidebarPeeking
         self.isEditingText = isEditingText
         self.activeRow = activeRow
     }
@@ -110,6 +118,10 @@ public enum KeyRouter {
 
         // 方向键与删除/回车（条件不满足时继续向下匹配字符）
         switch key.keyCode {
+        case KeyCode.escape:
+            if ctx.sidebarPeeking {
+                return .consume([.setSidebarPeeking(false)])
+            }
         case KeyCode.downArrow:
             return .consume([.moveFocus(1)])
         case KeyCode.upArrow:

@@ -1,11 +1,22 @@
 import Foundation
 import MailroomCore
 
+public enum HudPriority: Int, Comparable, Equatable, Sendable {
+    case secondary = 0
+    case navigation = 1
+    case core = 2
+
+    public static func < (lhs: HudPriority, rhs: HudPriority) -> Bool {
+        lhs.rawValue < rhs.rawValue
+    }
+}
+
 public struct HudItem: Identifiable, Equatable, Sendable {
     public var id: String { label }
     public let keys: [String]
     public let label: String
     public let disabled: Bool
+    public let priority: HudPriority
     public let command: DeckCommand
 }
 
@@ -60,19 +71,20 @@ public enum CommandCatalog {
         }()
 
         var list: [HudItem] = [
-            HudItem(keys: ["J", "K"], label: "切换", disabled: !ctx.hasRows, command: .moveFocus(1))
+            HudItem(keys: ["J", "K"], label: "切换", disabled: !ctx.hasRows, priority: .navigation, command: .moveFocus(1))
         ]
         if inboxMode {
-            list.append(HudItem(keys: ["Space"], label: "归档", disabled: !canActInbox, command: .card(.archive, nil)))
-            list.append(HudItem(keys: ["⇧K"], label: "保留", disabled: !canActInbox, command: .card(.keep, nil)))
-            list.append(HudItem(keys: ["⌫"], label: "推广", disabled: !canActInbox, command: .card(.trash, nil)))
+            list.append(HudItem(keys: ["Space"], label: "归档", disabled: !canActInbox, priority: .core, command: .card(.archive, nil)))
+            list.append(HudItem(keys: ["⇧K"], label: "保留", disabled: !canActInbox, priority: .core, command: .card(.keep, nil)))
+            list.append(HudItem(keys: ["⌫"], label: "推广", disabled: !canActInbox, priority: .core, command: .card(.trash, nil)))
         } else if ctx.folder != .kept {
-            list.append(HudItem(keys: ["R"], label: "拉回待处理", disabled: !canRescue, command: .rescueFocused))
+            list.append(HudItem(keys: ["R"], label: "拉回待处理", disabled: !canRescue, priority: .core, command: .rescueFocused))
         }
-        list.append(HudItem(keys: ["I"], label: "判据", disabled: ctx.activeRow == nil, command: .toggleAIReasoning))
-        list.append(HudItem(keys: ["↵"], label: "Mail", disabled: ctx.activeRow == nil, command: .openInNativeMail))
-        list.append(HudItem(keys: ["Z"], label: "撤销", disabled: !ctx.canUndo, command: .undo))
-        list.append(HudItem(keys: ["⌘K"], label: "命令", disabled: false, command: .openPalette))
+        list.append(HudItem(keys: ["↵"], label: "Mail", disabled: ctx.activeRow == nil, priority: .secondary, command: .openInNativeMail))
+        if ctx.canUndo {
+            list.append(HudItem(keys: ["Z"], label: "撤销", disabled: false, priority: .secondary, command: .undo))
+        }
+        list.append(HudItem(keys: ["⌘K"], label: "命令", disabled: false, priority: .secondary, command: .openPalette))
         return list
     }
 

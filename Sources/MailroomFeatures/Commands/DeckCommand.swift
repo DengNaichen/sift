@@ -37,6 +37,7 @@ public enum DeckCommand: Hashable, Sendable {
 
     // 工作台外壳
     case toggleSidebar
+    case setSidebarPeeking(Bool)
     case toggleTheme
     case openPalette
     case closePalette

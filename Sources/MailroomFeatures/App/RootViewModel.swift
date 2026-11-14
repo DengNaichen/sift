@@ -9,9 +9,11 @@ struct RootViewModel {
 
     var settingsOpen: Bool { app.shell.settingsOpen }
     var sidebarCollapsed: Bool { app.shell.sidebarCollapsed }
+    var sidebarPeeking: Bool { app.shell.sidebarPeeking }
     var paletteOpen: Bool { app.shell.paletteOpen }
     /// 设置台打开时左栏恒显示（作为设置导航）
     var showLeftSidebar: Bool { app.shell.settingsOpen || !app.shell.sidebarCollapsed }
+    var canPeekSidebar: Bool { app.shell.sidebarCollapsed && !app.shell.settingsOpen && !app.shell.paletteOpen }
     var nativeNoticeURL: String? { app.deck.nativeNoticeURL }
     var paletteCommands: [PaletteCommand] { app.paletteCommands }
 

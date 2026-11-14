@@ -98,7 +98,7 @@ struct FeatureViewModelTests {
         #expect(zero.canUndo)
     }
 
-    @Test("Sidebar exposes folder counts, scope and footer text")
+    @Test("Sidebar exposes folder counts, scope and footer controls")
     func sidebar() async {
         let app = await makeApp()
         let sidebar = SidebarViewModel(app: app)
@@ -109,8 +109,8 @@ struct FeatureViewModelTests {
         #expect(sidebar.count(of: .inbox) == 5)
         #expect(sidebar.isActive(folder: .inbox))
         #expect(!sidebar.isLiveSource)
-        #expect(sidebar.sourceHelpText == "当前为演示数据模式（按 ⌘K 可切换数据源）")
-        #expect(sidebar.savedMinutesText == "已省 \(MailFormatting.savedMinutes(count: app.deck.state.handled.count)) 分钟")
+        #expect(sidebar.showsDemoControls)
+        #expect(!sidebar.isDarkTheme)
     }
 
     @Test("Settings source selection and locked addresses")
@@ -127,14 +127,19 @@ struct FeatureViewModelTests {
         #expect(app.preferences.showKeyboardHUD == false)
     }
 
-    @Test("Root view model lays out sidebar visibility")
+    @Test("Root view model lays out sidebar visibility and peek state")
     func root() async {
         let app = await makeApp()
         let root = RootViewModel(app: app)
         #expect(root.showLeftSidebar)
+        #expect(!root.canPeekSidebar)
         app.perform(.toggleSidebar)
         #expect(!root.showLeftSidebar)
+        #expect(root.canPeekSidebar)
+        app.perform(.setSidebarPeeking(true))
+        #expect(root.sidebarPeeking)
         app.perform(.openSettings(nil))
+        #expect(!root.sidebarPeeking) // 打开设置立即收起 Peek 抽屉
         #expect(root.showLeftSidebar) // 设置台始终显示左栏导航
         app.perform(.toggleSidebar) // 设置打开时无效
         #expect(app.shell.sidebarCollapsed)

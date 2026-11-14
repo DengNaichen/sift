@@ -1,7 +1,7 @@
 import Foundation
 import MailroomCore
 
-/// 左侧导航栏：品牌栏、多邮箱范围滤镜、分拣夹树与底部状态栏。
+/// 左侧导航栏：品牌栏、多邮箱范围滤镜、分拣夹树与底部控制栏。
 /// 无状态投影：只持有 `AppModel` 引用，读取经 Observation 穿透到各 Store。
 @MainActor
 struct SidebarViewModel {
@@ -23,18 +23,10 @@ struct SidebarViewModel {
     func count(of folder: FolderId) -> Int { deck.counts[folder] ?? 0 }
     func isActive(folder: FolderId) -> Bool { deck.state.folder == folder }
 
-    // MARK: 底部状态栏
+    // MARK: 底部控制栏
 
     var isLiveSource: Bool { deck.sourceMode == .appleMail }
     var showsDemoControls: Bool { !isLiveSource && deck.supportsDemoControls }
-    var savedMinutesText: String {
-        "已省 \(MailFormatting.savedMinutes(count: deck.state.handled.count)) 分钟"
-    }
-    var sourceHelpText: String {
-        isLiveSource
-            ? "已连接 Apple Mail · 自动过滤 \(deck.state.handled.count) 封通知与推广"
-            : "当前为演示数据模式（按 ⌘K 可切换数据源）"
-    }
     var isDarkTheme: Bool { app.preferences.themeMode == .dark }
 
     // MARK: Intents

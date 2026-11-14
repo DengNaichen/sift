@@ -13,10 +13,11 @@ struct KeyRouterTests {
     static func ctx(
         palette: Bool = false,
         settings: Bool = false,
+        peeking: Bool = false,
         editing: Bool = false,
         row: KeyContext.RowKind = .inbox
     ) -> KeyContext {
-        KeyContext(paletteOpen: palette, settingsOpen: settings, isEditingText: editing, activeRow: row)
+        KeyContext(paletteOpen: palette, settingsOpen: settings, sidebarPeeking: peeking, isEditingText: editing, activeRow: row)
     }
 
     static func key(_ chars: String?, code: UInt16 = 0, cmd: Bool = false, ctrl: Bool = false, opt: Bool = false, shift: Bool = false) -> KeyInput {
@@ -58,6 +59,7 @@ struct KeyRouterTests {
         Case(name: "⌘Z passes (system undo)", input: key("z", cmd: true), context: ctx(), expected: .passThrough),
         Case(name: "editing text: j passes", input: key("j"), context: ctx(editing: true), expected: .passThrough),
         Case(name: "editing text: Esc passes outside settings", input: key("\u{1b}", code: K.escape), context: ctx(editing: true), expected: .passThrough),
+        Case(name: "peek sidebar: Esc dismisses peek", input: key("\u{1b}", code: K.escape), context: ctx(peeking: true), expected: .consume([.setSidebarPeeking(false)])),
 
         // 方向键
         Case(name: "↓ moves down", input: key("\u{F701}", code: K.downArrow), context: ctx(row: .none), expected: .consume([.moveFocus(1)])),

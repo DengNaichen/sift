@@ -6,27 +6,48 @@ struct KeyboardHUDView: View {
     let items: [HudItem]
     let onPerform: (DeckCommand) -> Void
 
+    private var navAndCoreItems: [HudItem] {
+        let filtered = items.filter { $0.priority >= .navigation }
+        return filtered.isEmpty ? items : filtered
+    }
+
+    private var coreOnlyItems: [HudItem] {
+        let filtered = items.filter { $0.priority == .core }
+        return filtered.isEmpty ? navAndCoreItems : filtered
+    }
+
     var body: some View {
-        HStack(spacing: 2) {
-            ForEach(Array(items.enumerated()), id: \.element.id) { idx, item in
-                if idx > 0 {
-                    Rectangle()
-                        .fill(p.ink.opacity(0.09))
-                        .frame(width: 1, height: 12)
-                        .padding(.horizontal, 2)
-                }
-                HudPillButton(item: item, onPerform: onPerform)
-            }
+        ViewThatFits(in: .horizontal) {
+            hudRow(for: items, showKeys: true)
+            hudRow(for: navAndCoreItems, showKeys: true)
+            hudRow(for: coreOnlyItems, showKeys: true)
+            hudRow(for: coreOnlyItems, showKeys: false)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4.5)
         .deckGlassCapsule(interactive: true)
+    }
+
+    private func hudRow(for subset: [HudItem], showKeys: Bool) -> some View {
+        HStack(spacing: 2) {
+            ForEach(Array(subset.enumerated()), id: \.element.id) { idx, item in
+                if idx > 0 {
+                    Rectangle()
+                        .fill(p.ink.opacity(p.mode == .dark ? 0.13 : 0.09))
+                        .frame(width: 1, height: 12)
+                        .padding(.horizontal, 2)
+                }
+                HudPillButton(item: item, showKeys: showKeys, onPerform: onPerform)
+            }
+        }
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
 
 private struct HudPillButton: View {
     @Environment(\.palette) private var p
     let item: HudItem
+    var showKeys: Bool = true
     let onPerform: (DeckCommand) -> Void
     @State private var hovered = false
 
@@ -35,20 +56,25 @@ private struct HudPillButton: View {
             onPerform(item.command)
         } label: {
             HStack(spacing: 5) {
-                HStack(spacing: 2) {
-                    ForEach(item.keys, id: \.self) { k in
-                        KbdView(text: k)
+                if showKeys {
+                    HStack(spacing: 2) {
+                        ForEach(item.keys, id: \.self) { k in
+                            KbdView(text: k)
+                        }
                     }
                 }
                 Text(item.label)
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(hovered && !item.disabled ? p.ink : p.ink2)
+                    .font(.system(size: 11.5, weight: .medium))
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .foregroundStyle(hovered && !item.disabled ? p.ink : p.ink.opacity(0.86))
             }
+            .fixedSize(horizontal: true, vertical: false)
             .padding(.horizontal, 7.5)
             .padding(.vertical, 4)
             .background(
                 Capsule()
-                    .fill(hovered && !item.disabled ? p.ink.opacity(p.mode == .dark ? 0.10 : 0.055) : .clear)
+                    .fill(hovered && !item.disabled ? p.ink.opacity(p.mode == .dark ? 0.12 : 0.065) : .clear)
             )
             .contentShape(Capsule())
         }
@@ -72,6 +98,7 @@ struct UndoToastView: View {
                     .font(.system(size: 12.5))
                     .foregroundStyle(p.ink)
                     .lineLimit(1)
+                    .truncationMode(.tail)
 
                 Spacer(minLength: 4)
 
@@ -82,9 +109,11 @@ struct UndoToastView: View {
                             .foregroundStyle(p.ink2)
                         Text("撤销")
                             .font(.system(size: 12, weight: .medium))
+                            .lineLimit(1)
                             .foregroundStyle(p.ink)
                         KbdView(text: "Z")
                     }
+                    .fixedSize(horizontal: true, vertical: false)
                     .padding(.horizontal, 9)
                     .padding(.vertical, 4.5)
                     .background(
@@ -101,14 +130,15 @@ struct UndoToastView: View {
                     .foregroundStyle(p.ink)
                 Text("已撤销，邮件已放回原位")
                     .font(.system(size: 12.5))
+                    .lineLimit(1)
                     .foregroundStyle(p.ink)
-                Spacer()
+                Spacer(minLength: 0)
             }
         }
         .padding(.leading, 15)
         .padding(.trailing, 7)
         .padding(.vertical, 6)
-        .frame(width: 356)
+        .frame(maxWidth: 356)
         .deckGlassCapsule(interactive: true)
     }
 }

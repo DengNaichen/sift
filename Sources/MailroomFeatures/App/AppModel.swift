@@ -87,17 +87,25 @@ public final class AppModel {
 
         case .toggleSidebar:
             guard !shell.settingsOpen else { return }
+            shell.sidebarPeeking = false
             environment.animate(0.2) {
                 shell.sidebarCollapsed.toggle()
             }
+        case .setSidebarPeeking(let peeking):
+            let canPeek = shell.sidebarCollapsed && !shell.settingsOpen && !shell.paletteOpen
+            shell.sidebarPeeking = peeking && canPeek
         case .toggleTheme:
             preferences.toggleTheme()
         case .openPalette:
+            shell.sidebarPeeking = false
             shell.paletteOpen = true
         case .closePalette:
             shell.paletteOpen = false
         case .togglePalette:
             shell.paletteOpen.toggle()
+            if shell.paletteOpen {
+                shell.sidebarPeeking = false
+            }
         case .openSettings(let section):
             openSettings(section)
         case .closeSettings:
@@ -116,6 +124,7 @@ public final class AppModel {
             settingsForm.activeSection = section
         }
         settingsForm.syncAccountsIfNeeded(from: deck.accounts)
+        shell.sidebarPeeking = false
         environment.animate(0.18) {
             shell.settingsOpen = true
         }
@@ -168,6 +177,7 @@ public final class AppModel {
         return KeyRouter.route(input, KeyContext(
             paletteOpen: shell.paletteOpen,
             settingsOpen: shell.settingsOpen,
+            sidebarPeeking: shell.sidebarPeeking,
             isEditingText: isEditingText,
             activeRow: rowKind
         ))

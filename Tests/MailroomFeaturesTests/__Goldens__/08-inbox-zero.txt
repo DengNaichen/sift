@@ -23,7 +23,6 @@ J+K|切换|disabled=true
 Space|归档|disabled=true
 ⇧K|保留|disabled=true
 ⌫|推广|disabled=true
-I|判据|disabled=true
 ↵|Mail|disabled=true
 Z|撤销|disabled=false
 ⌘K|命令|disabled=false

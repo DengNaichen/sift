@@ -23,9 +23,7 @@ J+K|切换|disabled=false
 Space|归档|disabled=false
 ⇧K|保留|disabled=false
 ⌫|推广|disabled=false
-I|判据|disabled=false
 ↵|Mail|disabled=false
-Z|撤销|disabled=true
 ⌘K|命令|disabled=false
 [palette]
 archive|当前邮件|阅毕归档|邀请函｜2026 AI 产品峰会 · 闭门圆桌（深圳）|Space|archivebox|archive 归档

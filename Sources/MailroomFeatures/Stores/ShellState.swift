@@ -6,6 +6,7 @@ import Observation
 @Observable
 public final class ShellState {
     public internal(set) var sidebarCollapsed: Bool = false
+    public internal(set) var sidebarPeeking: Bool = false
     public internal(set) var paletteOpen: Bool = false
     public internal(set) var settingsOpen: Bool = false
 

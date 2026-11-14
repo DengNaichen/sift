@@ -23,9 +23,7 @@ J+K|切换|disabled=false
 Space|归档|disabled=false
 ⇧K|保留|disabled=false
 ⌫|推广|disabled=false
-I|判据|disabled=false
 ↵|Mail|disabled=false
-Z|撤销|disabled=true
 ⌘K|命令|disabled=false
 [palette]
 close-settings|设置|返回收件箱|-|esc|arrow.left|inbox back 返回 收件箱 关闭设置
