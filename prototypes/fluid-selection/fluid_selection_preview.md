@@ -3,11 +3,11 @@
 将你截图中的 **丁香紫 × 鸢尾折痕 × 右下暖杏金（Domain-Warped Fluid + 微颗粒）** 用实时着色器合成后，作为邮件列表与侧栏的「微光选中态」对比预览：
 
 ````carousel
-![方案 A（浅色）· 左净右润丝绸悬浮卡：左侧文字区保持清透高对比度，右侧与右下角自然晕开紫杏晨光，配 1px 微光内描边](/Users/nd/.gemini/antigravity-cli/brain/916460e0-11cd-466b-9079-7d46f346e0d8/fluid_select_light_asymmetric.png)
+![方案 A（浅色）· 左净右润丝绸悬浮卡：左侧文字区保持清透高对比度，右侧与右下角自然晕开紫杏晨光，配 1px 微光内描边](assets/fluid_select_light_asymmetric.png)
 <!-- slide -->
-![方案 B（浅色）· 整行均匀柔雾卡：15% 均匀流体底纹满铺圆角卡片，整体偏柔和丁香紫雾感](/Users/nd/.gemini/antigravity-cli/brain/916460e0-11cd-466b-9079-7d46f346e0d8/fluid_select_light_uniform.png)
+![方案 B（浅色）· 整行均匀柔雾卡：15% 均匀流体底纹满铺圆角卡片，整体偏柔和丁香紫雾感](assets/fluid_select_light_uniform.png)
 <!-- slide -->
-![方案 A（深色）· 背光亚克力质感：暗黑纸面下透出克制的紫珀微光，比传统灰蓝选中条更有呼吸感](/Users/nd/.gemini/antigravity-cli/brain/916460e0-11cd-466b-9079-7d46f346e0d8/fluid_select_dark.png)
+![方案 A（深色）· 背光亚克力质感：暗黑纸面下透出克制的紫珀微光，比传统灰蓝选中条更有呼吸感](assets/fluid_select_dark.png)
 ````
 
 > [!TIP]

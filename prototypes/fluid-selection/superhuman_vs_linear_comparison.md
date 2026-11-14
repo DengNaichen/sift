@@ -1,13 +1,13 @@
 # Linear 三栏 × Superhuman 细节融合实验台
 
-网页已热更新就绪：`http://127.0.0.1:5188/`（源码位于 [App.tsx](file:///Users/nd/Developer/mailroom-deck/prototypes/superhuman-deck/src/App.tsx) 与 [styles.css](file:///Users/nd/Developer/mailroom-deck/prototypes/superhuman-deck/src/styles.css)）。
+本记录保留早期 Linear × Superhuman 融合实验的设计说明与截图。当前可运行的仓库内原型见 [Fluid Selection 实验台](fluid-selection-lab.html)；早期 React 实验源码未纳入当前仓库。
 
 ````carousel
-![融合方案 A：减负清爽列表 + 钴蓝游标 + 正文顶部可折叠 AI 判据条（浅色暖灰）](/Users/nd/.gemini/antigravity-cli/brain/916460e0-11cd-466b-9079-7d46f346e0d8/hybrid_inline_light.png)
+![融合方案 A：减负清爽列表 + 钴蓝游标 + 正文顶部可折叠 AI 判据条（浅色暖灰）](assets/hybrid_inline_light.png)
 <!-- slide -->
-![融合方案 B：减负清爽列表 + 右侧可开关 AI 窄洞察栏与历史线程卡片](/Users/nd/.gemini/antigravity-cli/brain/916460e0-11cd-466b-9079-7d46f346e0d8/hybrid_rail_light.png)
+![融合方案 B：减负清爽列表 + 右侧可开关 AI 窄洞察栏与历史线程卡片](assets/hybrid_rail_light.png)
 <!-- slide -->
-![清零时刻：融合 Linear 建筑几何感与 Superhuman 情绪收尾的 Inbox Zero 远山画卷（深色模式）](/Users/nd/.gemini/antigravity-cli/brain/916460e0-11cd-466b-9079-7d46f346e0d8/hybrid_zero_dark.png)
+![清零时刻：融合 Linear 建筑几何感与 Superhuman 情绪收尾的 Inbox Zero 远山画卷（深色模式）](assets/hybrid_zero_dark.png)
 ````
 
 > [!TIP]

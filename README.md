@@ -4,6 +4,11 @@ Sift 是 100% 纯原生 Swift / SwiftUI 实现的 macOS 三栏个人邮件分拣
 
 ## 快速启动
 
+```bash
+git clone git@github.com:DengNaichen/sift.git
+cd sift
+```
+
 ### 方式 1：终端直接运行（继承当前终端的磁盘访问权限，最快体验真机邮箱）
 
 如果你使用的终端（Terminal / iTerm2 / Herdr）已开启「完全磁盘访问权限」，直接运行即可秒连本机 Apple Mail：

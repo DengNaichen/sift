@@ -1,6 +1,8 @@
 # Prototypes
 
-存放 Mailroom Deck 的 UI / 交互原型与配套设计文档。
+存放 Sift 的 UI / 交互原型与配套设计文档。文档与截图使用仓库内相对路径；历史预览截图位于 `fluid-selection/assets/`。
+
+校验文档链接：`python3 scripts/check-doc-links.py`（从仓库根目录运行）。
 
 ## 索引
 
