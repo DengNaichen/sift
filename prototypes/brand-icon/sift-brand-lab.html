@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sift — 3B Base + Signature Palette Lab (Round 4)</title>
+<style>
+  :root {
+    --canvas: #FAFBFD;
+    --paper: #FFFFFF;
+    --sunken: #F5F7FA;
+    --ink: #0F1117;
+    --ink2: #484E5C;
+    --ink3: #878E9C;
+    --line: rgba(15, 20, 32, 0.055);
+    --line-strong: rgba(15, 20, 32, 0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang SC", sans-serif;
+    background: var(--canvas);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    padding: 34px 26px 64px;
+  }
+  .container {
+    max-width: 1140px;
+    margin: 0 auto;
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--ink3);
+    margin-top: 4px;
+  }
+  .badge-pill {
+    font-size: 12px;
+    color: var(--ink2);
+    background: var(--sunken);
+    border: 1px solid var(--line);
+    padding: 5px 12px;
+    border-radius: 999px;
+  }
+
+  .variants-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .variant-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px 12px 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .variant-card:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-1px);
+  }
+  .variant-card.selected {
+    border-color: #0F1117;
+    box-shadow: 0 10px 28px rgba(15, 17, 23, 0.07);
+  }
+  .variant-card img {
+    width: 128px;
+    height: 128px;
+    display: block;
+    margin: 0 auto 10px;
+    user-select: none;
+  }
+  .variant-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .variant-desc {
+    font-size: 11px;
+    color: var(--ink3);
+    margin-top: 4px;
+    line-height: 1.45;
+  }
+
+  .stage-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 16px;
+  }
+  .panel {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .panel-label {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ink3);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .wallpaper {
+    border-radius: 12px;
+    padding: 46px 20px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .wallpaper.light {
+    background: linear-gradient(135deg, #E6ECF5 0%, #DDE5F2 50%, #EFE8E4 100%);
+    margin-bottom: 12px;
+  }
+  .wallpaper.dark {
+    background: linear-gradient(135deg, #131622 0%, #1B1E2E 55%, #231D29 100%);
+  }
+  .dock {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 7px 12px 9px;
+    border-radius: 20px;
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+  }
+  .wallpaper.light .dock {
+    background: rgba(255, 255, 255, 0.56);
+    border: 0.5px solid rgba(255, 255, 255, 0.78);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  }
+  .wallpaper.dark .dock {
+    background: rgba(28, 30, 40, 0.58);
+    border: 0.5px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  }
+  .dock-item {
+    position: relative;
+    width: 58px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dock-item::after {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(15, 17, 23, 0.45);
+  }
+  .wallpaper.dark .dock-item::after {
+    background: rgba(255, 255, 255, 0.65);
+  }
+  .dock-tooltip {
+    position: absolute;
+    top: -34px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 11px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    backdrop-filter: blur(16px);
+  }
+  .wallpaper.light .dock-tooltip {
+    background: rgba(250, 251, 253, 0.88);
+    color: #0F1117;
+    border: 0.5px solid rgba(15, 20, 32, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  .wallpaper.dark .dock-tooltip {
+    background: rgba(34, 36, 46, 0.90);
+    color: #ECEDEF;
+    border: 0.5px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  }
+  .mock-squircle {
+    width: 47px;
+    height: 47px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 9px rgba(0, 0, 0, 0.22);
+    font-size: 21px;
+    color: white;
+  }
+  .mock-finder { background: linear-gradient(180deg, #54B5FF 0%, #1C7EF2 100%); }
+  .mock-applemail { background: linear-gradient(180deg, #2AA2FF 0%, #0E6CE8 100%); }
+  .mock-notes { background: linear-gradient(180deg, #FFE052 0%, #FFFFFF 32%, #F4F5F7 100%); color: #555; }
+  .dock-app-img {
+    width: 58px;
+    height: 58px;
+    display: block;
+  }
+
+  .mac-menubar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 7px 14px;
+    background: var(--sunken);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    font-size: 13px;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  .mac-menubar .app-bold { font-weight: 700; }
+  .mac-menubar .menu-dim { color: var(--ink2); }
+
+  .sidebar-mock {
+    background: #F4F5F8;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+  }
+  .sidebar-col { width: 196px; flex-shrink: 0; }
+  .brand-row {
+    height: 32px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 8px;
+  }
+  .sidebar-badge-crop {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 0.5px solid rgba(15, 20, 32, 0.10);
+  }
+  .sidebar-badge-crop img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .brand-name { font-size: 13.5px; font-weight: 600; color: #0F1117; }
+  .folder-row {
+    height: 29px;
+    border-radius: 8px;
+    padding: 0 9px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--ink2);
+  }
+  .folder-row.active {
+    background: linear-gradient(125deg, #F5F1FF 0%, #EFE7FE 65%, #FCEADF 100%);
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .paper-stub {
+    flex: 1;
+    background: #FFFFFF;
+    border-radius: 10px;
+    border: 0.5px solid var(--line);
+    padding: 14px;
+    font-size: 12px;
+    color: var(--ink3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    font-size: 11.5px;
+    background: var(--sunken);
+    padding: 2px 6px;
+    border-radius: 5px;
+  }
+  @media (max-width: 960px) {
+    .variants-grid { grid-template-columns: repeat(2, 1fr); }
+    .stage-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <h1>Sift — 以 3B 为基底注入品牌配色的 4 款演进方案</h1>
+      <div class="subtitle">保留 3B 白棉纸质感与三折雕塑「S」骨架，按不同比例融入紫杏晨光与主题强调色</div>
+    </div>
+    <div class="badge-pill"><code>Sift.app</code> · <code>app.siftmail.mac</code></div>
+  </header>
+
+  <section class="variants-grid" id="variantCards">
+    <div class="variant-card selected" data-src="assets/squircle-4a-1024.png" data-raw="assets/source-4a.jpg">
+      <img src="assets/squircle-4a-1024.png" alt="4A Ink to Dawn" />
+      <div class="variant-title">4A · 浓墨渐入紫杏 ⭐</div>
+      <div class="variant-desc">保留浓墨顶折压阵，中折转丁香紫，底折化作暖杏磨砂玻璃微光</div>
+    </div>
+    <div class="variant-card" data-src="assets/squircle-4b-1024.png" data-raw="assets/source-4b.jpg">
+      <img src="assets/squircle-4b-1024.png" alt="4B Iris Lilac Apricot" />
+      <div class="variant-title">4B · 鸢尾丁香暖杏</div>
+      <div class="variant-desc">白棉纸底 + 满色丝绒鸢尾紫顶折 → 丁香粉中折 → 暖杏金玻璃底折</div>
+    </div>
+    <div class="variant-card" data-src="assets/squircle-4c-1024.png" data-raw="assets/source-4c.jpg">
+      <img src="assets/squircle-4c-1024.png" alt="4C Cobalt Amber Glass" />
+      <div class="variant-title">4C · 钴蓝琥珀彩玻</div>
+      <div class="variant-desc">提取主题 Cobalt 钴蓝顶折 → 淡紫蓝中折 → Amber 暖琥珀玻璃底折</div>
+    </div>
+    <div class="variant-card" data-src="assets/squircle-4d-1024.png" data-raw="assets/source-4d.jpg">
+      <img src="assets/squircle-4d-1024.png" alt="4D Silk Matte Base + White S" />
+      <div class="variant-title">4D · 柔雾紫杏底白笺</div>
+      <div class="variant-desc">平整哑光紫杏晨光底纸 + 纯白卡纸到半透明白磨砂玻璃的三折 S</div>
+    </div>
+    <div class="variant-card" data-src="assets/squircle-3b-1024.png" data-raw="assets/source-3b.jpg">
+      <img src="assets/squircle-3b-1024.png" alt="3B Original Monochrome" />
+      <div class="variant-title">3B · 原版纯墨对照</div>
+      <div class="variant-desc">上一轮纯黑白灰三阶宣纸浓墨版（供同屏 A/B 对比色彩分量）</div>
+    </div>
+  </section>
+
+  <section class="stage-grid">
+    <div class="panel">
+      <div class="panel-label">
+        <span>macOS Dock 栏实景对比（紧邻系统蓝色「邮件」）</span>
+        <span>64pt 真实比例</span>
+      </div>
+      <div class="wallpaper light">
+        <div class="dock">
+          <div class="dock-item"><div class="mock-squircle mock-finder">☺︎</div></div>
+          <div class="dock-item"><div class="mock-squircle mock-applemail">✉︎</div></div>
+          <div class="dock-item">
+            <div class="dock-tooltip">Sift</div>
+            <img class="dock-app-img js-squircle" src="assets/squircle-4a-1024.png" alt="Dock Icon Light" />
+          </div>
+          <div class="dock-item"><div class="mock-squircle mock-notes">≡</div></div>
+        </div>
+      </div>
+      <div class="wallpaper dark">
+        <div class="dock">
+          <div class="dock-item"><div class="mock-squircle mock-finder">☺︎</div></div>
+          <div class="dock-item"><div class="mock-squircle mock-applemail">✉︎</div></div>
+          <div class="dock-item">
+            <div class="dock-tooltip">Sift</div>
+            <img class="dock-app-img js-squircle" src="assets/squircle-4a-1024.png" alt="Dock Icon Dark" />
+          </div>
+          <div class="dock-item"><div class="mock-squircle mock-notes">≡</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">
+        <span>菜单栏与窗口左上角 22×22 徽标真实排印</span>
+        <span>SidebarView 1:1</span>
+      </div>
+      <div class="mac-menubar">
+        <span></span>
+        <span class="app-bold">Sift</span>
+        <span class="menu-dim">文件</span>
+        <span class="menu-dim">编辑</span>
+        <span class="menu-dim">显示</span>
+        <span class="menu-dim">窗口</span>
+      </div>
+
+      <div class="sidebar-mock">
+        <div class="sidebar-col">
+          <div class="brand-row">
+            <div class="sidebar-badge-crop">
+              <img class="js-raw" src="assets/source-4a.jpg" alt="22pt Badge" />
+            </div>
+            <span class="brand-name">Sift</span>
+          </div>
+          <div class="folder-row active"><span>全部待处理</span><span>4</span></div>
+          <div class="folder-row"><span>已自动归档</span><span>18</span></div>
+          <div class="folder-row"><span>废纸篓</span><span>9</span></div>
+        </div>
+        <div class="paper-stub">内嵌圆角白纸工作台</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  const cards = document.querySelectorAll('.variant-card');
+  const squircleImgs = document.querySelectorAll('.js-squircle');
+  const rawImgs = document.querySelectorAll('.js-raw');
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      cards.forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      squircleImgs.forEach(img => img.src = card.dataset.src);
+      rawImgs.forEach(img => img.src = card.dataset.raw);
+    });
+  });
+</script>
+</body>
+</html>
