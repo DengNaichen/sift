@@ -1,0 +1,39 @@
+{
+  "fill" : {
+    "solid" : "extended-srgb:0.96471,0.96863,0.98039,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill" : "automatic",
+          "image-name" : "03-top-iris.svg",
+          "name" : "03-top-iris"
+        },
+        {
+          "image-name" : "02-middle-lilac.svg",
+          "name" : "02-middle-lilac"
+        },
+        {
+          "image-name" : "01-bottom-apricot.svg",
+          "name" : "01-bottom-apricot"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.35
+      },
+      "specular" : false,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.3
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
