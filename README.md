@@ -2,7 +2,10 @@
 
 Sift 是 100% 纯原生 Swift / SwiftUI 实现的 macOS 三栏个人邮件分拣工作台，直接双向对接系统「邮件（Apple Mail）」。
 
-## 快速启动
+- **系统要求**：macOS 26 及以上 · Apple Silicon（`arm64`）
+- **直接下载安装**：前往 [GitHub Releases](https://github.com/DengNaichen/sift/releases) 下载最新经过 Apple 公证的 `Sift-v*.dmg`，将 `Sift.app` 拖入 `Applications` 即可。
+
+## 本地构建与开发
 
 ```bash
 git clone git@github.com:DengNaichen/sift.git
@@ -103,3 +106,16 @@ swift run mailroom-bridge export-eval --limit 20 --output /tmp/mailroom-eval.jso
 | `1` / `2` / `3` | 切换「全部待处理」/「已自动归档」/「废纸篓」 |
 | `[`（或 `⌘\`） | 折叠 / 展开左侧边栏 |
 | `⌘K` | 搜索邮件、切换邮箱范围或执行命令 |
+
+## 发布流水线
+
+仓库内置了与 GitHub Actions 对齐的签名、Apple 公证与 DMG 发布脚本（见 [.github/workflows/macos-release.yml](.github/workflows/macos-release.yml)）：
+
+```bash
+# 在干净且同步的 main 分支上更新版本号（或为当前版本打标）并推送 v* tag 自动触发云端公证发版
+./scripts/bump-version.sh 0.0.1
+```
+
+## 开源协议
+
+本项目基于 [GNU General Public License v3.0](LICENSE) 开源。
