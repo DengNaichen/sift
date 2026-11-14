@@ -1,0 +1,164 @@
+{
+  "total": 37,
+  "completed": 37,
+  "errors": 0,
+  "reference_action_distribution": {
+    "trash": 12,
+    "archive": 11,
+    "keep": 11,
+    "review": 3
+  },
+  "raw_action_agreement": {
+    "correct": 36,
+    "total": 37
+  },
+  "final_action_agreement": {
+    "correct": 36,
+    "total": 37
+  },
+  "rule_override_count": 2,
+  "unsafe_trash_ids": [],
+  "action_confusion_reference_rows_final_columns": {
+    "keep": {
+      "keep": 11,
+      "archive": 0,
+      "trash": 0,
+      "review": 0
+    },
+    "archive": {
+      "keep": 0,
+      "archive": 11,
+      "trash": 0,
+      "review": 0
+    },
+    "trash": {
+      "keep": 0,
+      "archive": 0,
+      "trash": 11,
+      "review": 1
+    },
+    "review": {
+      "keep": 0,
+      "archive": 0,
+      "trash": 0,
+      "review": 3
+    }
+  },
+  "category_evaluation": {
+    "reference_distribution": {
+      "social": 4,
+      "news": 5,
+      "respond": 6,
+      "security": 5,
+      "fyi": 6,
+      "marketing": 4,
+      "review": 3,
+      "pitch": 4
+    },
+    "raw_category_agreement": {
+      "correct": 36,
+      "total": 37
+    },
+    "final_category_agreement": {
+      "correct": 36,
+      "total": 37
+    },
+    "confusion_reference_rows_final_columns": {
+      "respond": {
+        "respond": 6,
+        "fyi": 0,
+        "security": 0,
+        "news": 0,
+        "pitch": 0,
+        "social": 0,
+        "marketing": 0,
+        "review": 0
+      },
+      "fyi": {
+        "respond": 0,
+        "fyi": 6,
+        "security": 0,
+        "news": 0,
+        "pitch": 0,
+        "social": 0,
+        "marketing": 0,
+        "review": 0
+      },
+      "security": {
+        "respond": 0,
+        "fyi": 0,
+        "security": 5,
+        "news": 0,
+        "pitch": 0,
+        "social": 0,
+        "marketing": 0,
+        "review": 0
+      },
+      "news": {
+        "respond": 0,
+        "fyi": 0,
+        "security": 0,
+        "news": 5,
+        "pitch": 0,
+        "social": 0,
+        "marketing": 0,
+        "review": 0
+      },
+      "pitch": {
+        "respond": 0,
+        "fyi": 0,
+        "security": 0,
+        "news": 0,
+        "pitch": 4,
+        "social": 0,
+        "marketing": 0,
+        "review": 0
+      },
+      "social": {
+        "respond": 0,
+        "fyi": 0,
+        "security": 0,
+        "news": 0,
+        "pitch": 0,
+        "social": 3,
+        "marketing": 0,
+        "review": 1
+      },
+      "marketing": {
+        "respond": 0,
+        "fyi": 0,
+        "security": 0,
+        "news": 0,
+        "pitch": 0,
+        "social": 0,
+        "marketing": 4,
+        "review": 0
+      },
+      "review": {
+        "respond": 0,
+        "fyi": 0,
+        "security": 0,
+        "news": 0,
+        "pitch": 0,
+        "social": 0,
+        "marketing": 0,
+        "review": 3
+      }
+    }
+  },
+  "disagreements": [
+    {
+      "id": "open-07",
+      "subject": "Re: sylpheed-claws",
+      "gold_action": "trash",
+      "pred_action": "review",
+      "gold_category": "social",
+      "pred_category": "review",
+      "review_reason": "protection_conflict"
+    }
+  ],
+  "input_tokens": 223506,
+  "output_tokens": 0,
+  "equivalent_paid_cost_usd_at_0_10_per_million": 0.022351,
+  "observed_median_seconds": 1.0221
+}

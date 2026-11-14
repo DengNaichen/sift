@@ -1,0 +1,6 @@
+# Local evaluation runs (raw API requests/responses) & private mailbox exports
+runs/
+local/
+*.private.json
+__pycache__/
+*.py[cod]
