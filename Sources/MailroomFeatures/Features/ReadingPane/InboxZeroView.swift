@@ -3,20 +3,10 @@ import MailroomCore
 
 struct InboxZeroView: View {
     @Environment(\.palette) private var p
-    let vm: DeckViewModel
+    let model: InboxZeroViewModel
 
-    private var personalHandledCount: Int {
-        vm.state.tally.archived + vm.state.tally.kept + vm.state.tally.trashed
-    }
-
-    private var stats: [(String, Int)] {
-        [
-            ("阅毕归档", vm.state.tally.archived),
-            ("重要保留", vm.state.tally.kept),
-            ("判为推广", vm.state.tally.trashed),
-            ("AI 自动挡下", vm.state.handled.count)
-        ]
-    }
+    private var personalHandledCount: Int { model.personalHandledCount }
+    private var stats: [(String, Int)] { model.stats }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -72,9 +62,9 @@ struct InboxZeroView: View {
                 .padding(.top, 22)
 
                 HStack(spacing: 8) {
-                    if vm.sourceMode == .appleMail {
+                    if model.isLiveSource {
                         Button {
-                            Task { await vm.reloadSnapshot(initial: false) }
+                            model.perform(.syncNow)
                         } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "arrow.clockwise")
@@ -88,9 +78,9 @@ struct InboxZeroView: View {
                             .background(p.ink, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                         }
                         .buttonStyle(.plain)
-                    } else if vm.supportsDemoControls {
+                    } else if model.showsDemoControls {
                         Button {
-                            Task { await vm.simulateIncoming() }
+                            model.perform(.simulateIncoming)
                         } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "tray.and.arrow.down")
@@ -106,7 +96,7 @@ struct InboxZeroView: View {
                         .buttonStyle(.plain)
 
                         Button {
-                            Task { await vm.resetDemo() }
+                            model.perform(.resetDemo)
                         } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "arrow.counterclockwise")
@@ -127,7 +117,7 @@ struct InboxZeroView: View {
                 }
                 .padding(.top, 22)
 
-                if !vm.state.undo.isEmpty {
+                if model.canUndo {
                     HStack(spacing: 5) {
                         Text("手滑了？按")
                         KbdView(text: "Z")
@@ -213,145 +203,5 @@ private struct InboxZeroRidgeArtView: View {
                 .fill(p.ridge3)
             }
         }
-    }
-}
-
-struct KeyboardHUDView: View {
-    @Environment(\.palette) private var p
-    let items: [HudItem]
-
-    var body: some View {
-        HStack(spacing: 2) {
-            ForEach(Array(items.enumerated()), id: \.element.id) { idx, item in
-                if idx > 0 {
-                    Rectangle()
-                        .fill(p.ink.opacity(0.09))
-                        .frame(width: 1, height: 12)
-                        .padding(.horizontal, 2)
-                }
-                HudPillButton(item: item)
-            }
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4.5)
-        .deckGlassCapsule(interactive: true)
-    }
-}
-
-private struct HudPillButton: View {
-    @Environment(\.palette) private var p
-    let item: HudItem
-    @State private var hovered = false
-
-    var body: some View {
-        Button(action: item.action) {
-            HStack(spacing: 5) {
-                HStack(spacing: 2) {
-                    ForEach(item.keys, id: \.self) { k in
-                        KbdView(text: k)
-                    }
-                }
-                Text(item.label)
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(hovered && !item.disabled ? p.ink : p.ink2)
-            }
-            .padding(.horizontal, 7.5)
-            .padding(.vertical, 4)
-            .background(
-                Capsule()
-                    .fill(hovered && !item.disabled ? p.ink.opacity(p.mode == .dark ? 0.10 : 0.055) : .clear)
-            )
-            .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .disabled(item.disabled)
-        .opacity(item.disabled ? 0.38 : 1.0)
-        .onHover { hovered = $0 }
-    }
-}
-
-struct UndoToastView: View {
-    @Environment(\.palette) private var p
-    let toast: DeckToast
-    let onUndo: () -> Void
-    @State private var undoHovered = false
-
-    var body: some View {
-        HStack(spacing: 10) {
-            if toast.kind == .done {
-                Text(toast.entry.descriptionText)
-                    .font(.system(size: 12.5))
-                    .foregroundStyle(p.ink)
-                    .lineLimit(1)
-
-                Spacer(minLength: 4)
-
-                Button(action: onUndo) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "arrow.uturn.backward")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(p.ink2)
-                        Text("撤销")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(p.ink)
-                        KbdView(text: "Z")
-                    }
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 4.5)
-                    .background(
-                        Capsule()
-                            .fill(p.ink.opacity(undoHovered ? (p.mode == .dark ? 0.16 : 0.10) : (p.mode == .dark ? 0.11 : 0.065)))
-                    )
-                    .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .onHover { undoHovered = $0 }
-            } else {
-                Image(systemName: "checkmark")
-                    .font(.system(size: 11.5, weight: .bold))
-                    .foregroundStyle(p.ink)
-                Text("已撤销，邮件已放回原位")
-                    .font(.system(size: 12.5))
-                    .foregroundStyle(p.ink)
-                Spacer()
-            }
-        }
-        .padding(.leading, 15)
-        .padding(.trailing, 7)
-        .padding(.vertical, 6)
-        .frame(width: 356)
-        .deckGlassCapsule(interactive: true)
-    }
-}
-
-struct NativeNoticeBanner: View {
-    @Environment(\.palette) private var p
-    let url: String
-
-    var body: some View {
-        HStack(spacing: 10) {
-            ZStack {
-                Circle()
-                    .fill(p.ink.opacity(p.mode == .dark ? 0.11 : 0.065))
-                    .frame(width: 28, height: 28)
-                Image(systemName: "arrow.up.right")
-                    .font(.system(size: 12.5, weight: .medium))
-                    .foregroundStyle(p.ink)
-            }
-            VStack(alignment: .leading, spacing: 1.5) {
-                Text("正在 Apple Mail 中打开原信")
-                    .font(.system(size: 12.5, weight: .medium))
-                    .foregroundStyle(p.ink)
-                Text(url.removingPercentEncoding ?? url)
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(p.ink3)
-                    .lineLimit(1)
-            }
-        }
-        .padding(.vertical, 8)
-        .padding(.leading, 9)
-        .padding(.trailing, 16)
-        .frame(maxWidth: 420)
-        .deckGlassCapsule()
     }
 }

@@ -3,15 +3,7 @@ import MailroomCore
 
 struct SidebarView: View {
     @Environment(\.palette) private var p
-    let vm: DeckViewModel
-
-    private var triageFolders: [FolderDef] {
-        FolderDef.all.filter { $0.group == .triage }
-    }
-
-    private var processedFolders: [FolderDef] {
-        FolderDef.all.filter { $0.group == .processed }
-    }
+    let model: SidebarViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -25,7 +17,7 @@ struct SidebarView: View {
                 Spacer()
 
                 Button {
-                    vm.toggleSidebar()
+                    model.perform(.toggleSidebar)
                 } label: {
                     Image(systemName: "sidebar.left")
                         .font(.system(size: 12.5, weight: .medium))
@@ -40,24 +32,24 @@ struct SidebarView: View {
             .padding(.horizontal, 4)
 
             // 2. 多邮箱范围滤镜（支持 2–N 个真实邮箱横向自适应切换）
-            if vm.accounts.count > 1 {
+            if model.showsAccountTabs {
                 VStack(alignment: .leading, spacing: 4) {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 2) {
                             AccountScopeTab(
                                 label: "全部",
                                 dotColor: nil,
-                                active: vm.state.accountScope == .all
+                                active: model.isAllAccountsActive
                             ) {
-                                vm.setAccountScope(.all)
+                                model.perform(.setAccountScope(.all))
                             }
-                            ForEach(vm.accounts) { acc in
+                            ForEach(model.accounts) { acc in
                                 AccountScopeTab(
                                     label: acc.label,
                                     dotColor: p.accountDotColor(acc.id),
-                                    active: vm.state.accountScope == .account(acc.id)
+                                    active: model.isActive(account: acc)
                                 ) {
-                                    vm.setAccountScope(.account(acc.id))
+                                    model.perform(.setAccountScope(.account(acc.id)))
                                 }
                                 .help(acc.address)
                             }
@@ -66,7 +58,7 @@ struct SidebarView: View {
                     }
                     .background(p.ink.opacity(0.055), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
 
-                    if let activeAcc = vm.activeAccount {
+                    if let activeAcc = model.activeAccount {
                         HStack(spacing: 5) {
                             Circle()
                                 .fill(p.accountDotColor(activeAcc.id))
@@ -84,7 +76,7 @@ struct SidebarView: View {
 
             // 3. 搜索与命令入口
             Button {
-                vm.paletteOpen = true
+                model.perform(.openPalette)
             } label: {
                 HStack(spacing: 7) {
                     Image(systemName: "magnifyingglass")
@@ -114,13 +106,13 @@ struct SidebarView: View {
                             .padding(.horizontal, 8)
                             .padding(.bottom, 2)
 
-                        ForEach(triageFolders) { def in
+                        ForEach(model.triageFolders) { def in
                             SidebarFolderRow(
                                 def: def,
-                                count: vm.counts[def.id] ?? 0,
-                                active: vm.state.folder == def.id
+                                count: model.count(of: def.id),
+                                active: model.isActive(folder: def.id)
                             ) {
-                                vm.setFolder(def.id)
+                                model.perform(.setFolder(def.id))
                             }
                         }
                     }
@@ -133,13 +125,13 @@ struct SidebarView: View {
                             .padding(.horizontal, 8)
                             .padding(.bottom, 2)
 
-                        ForEach(processedFolders) { def in
+                        ForEach(model.processedFolders) { def in
                             SidebarFolderRow(
                                 def: def,
-                                count: vm.counts[def.id] ?? 0,
-                                active: vm.state.folder == def.id
+                                count: model.count(of: def.id),
+                                active: model.isActive(folder: def.id)
                             ) {
-                                vm.setFolder(def.id)
+                                model.perform(.setFolder(def.id))
                             }
                         }
                     }
@@ -152,46 +144,44 @@ struct SidebarView: View {
             // 5. 底部状态与控制栏
             HStack(spacing: 4) {
                 Circle()
-                    .fill(vm.sourceMode == .appleMail ? p.sage : p.amber)
+                    .fill(model.isLiveSource ? p.sage : p.amber)
                     .frame(width: 5.5, height: 5.5)
-                Text("已省 \(MailFormatting.savedMinutes(count: vm.state.handled.count)) 分钟")
+                Text(model.savedMinutesText)
                     .font(.system(size: 11))
                     .foregroundStyle(p.ink3)
                     .lineLimit(1)
-                    .help(vm.sourceMode == .appleMail
-                          ? "已连接 Apple Mail · 自动过滤 \(vm.state.handled.count) 封通知与推广"
-                          : "当前为演示数据模式（按 ⌘K 可切换数据源）")
+                    .help(model.sourceHelpText)
 
                 Spacer(minLength: 2)
 
-                if vm.sourceMode == .appleMail {
+                if model.isLiveSource {
                     IconFooterButton(
                         systemName: "arrow.clockwise",
                         help: "立即同步 Apple Mail（⌘R）"
                     ) {
-                        Task { await vm.reloadSnapshot(initial: false) }
+                        model.perform(.syncNow)
                     }
-                } else if vm.supportsDemoControls {
+                } else if model.showsDemoControls {
                     IconFooterButton(systemName: "envelope.badge", help: "模拟收到 3 封新邮件") {
-                        Task { await vm.simulateIncoming() }
+                        model.perform(.simulateIncoming)
                     }
                     IconFooterButton(systemName: "arrow.counterclockwise", help: "重置演示数据") {
-                        Task { await vm.resetDemo() }
+                        model.perform(.resetDemo)
                     }
                 }
 
                 IconFooterButton(
-                    systemName: vm.themeMode == .dark ? "moon" : "sun.max",
-                    help: vm.themeMode == .dark ? "切换到浅色模式" : "切换到深色模式"
+                    systemName: model.isDarkTheme ? "moon" : "sun.max",
+                    help: model.isDarkTheme ? "切换到浅色模式" : "切换到深色模式"
                 ) {
-                    vm.toggleTheme()
+                    model.perform(.toggleTheme)
                 }
 
                 IconFooterButton(
                     systemName: "gearshape",
                     help: "设置（⌘,）"
                 ) {
-                    vm.openSettings()
+                    model.perform(.openSettings(nil))
                 }
             }
             .frame(height: 28)

@@ -38,7 +38,39 @@ open dist/Mailroom.app
 | Apple Mail 双向桥 | `Sources/MailroomCore/MailBridge/AppleMailAdapter.swift` | 只读查询 `Envelope Index`（`parsed_emlx_v2` 本地缓存）+ `FSEvents` 实时监听 + 安全读写协调 |
 | 可插拔分类器层与安全守门 | `Sources/MailroomCore/Classifier/MailClassifier.swift` | 定义 `MailClassifier` 协议与 `ClassificationInput`；`RuleBasedClassifier` 强制执行已插旗保留、不完整/纯图/样板正文归为 `uncertain`，以及本人发件/已插旗线程禁止自动删除 |
 | 只读诊断与评测导出工具 | `Sources/MailroomCore/MailBridge/EvalSampleExporter.swift` & `Sources/MailroomBridgeCLI/main.swift` | `mailroom-bridge doctor`（脱敏诊断账户语义、`WAL`、`分片命中率`）与 `export-eval`（导出权限为 `0600` 的评测 JSON） |
-| 原生三栏界面 | `Sources/MailroomApp/` | 建筑感中性灰阶浅/深色主题、无框悬浮滚动条、三栏纸页布局、原句高亮自动滚动、底部快捷键 HUD 与 `⌘K` 全局命令面板 |
+| 原生三栏界面（MVVM） | `Sources/MailroomFeatures/` | 建筑感中性灰阶浅/深色主题、无框悬浮滚动条、三栏纸页布局、底部快捷键 HUD 与 `⌘K` 全局命令面板；详见下节 |
+| 应用入口 | `Sources/MailroomApp/MailroomAppMain.swift` | 仅 `@main`：`AppModel(environment: .live)` + `MailroomScene` |
+
+## 界面层 MVVM 结构
+
+```
+View ──▶ Feature ViewModel（无状态投影） ──▶ AppModel.perform(DeckCommand) ──▶ Stores ──▶ DeckReducer / MailAdapter（MailroomCore）
+```
+
+| 层 | 路径 | 职责 |
+| --- | --- | --- |
+| 依赖注入 | `App/AppEnvironment.swift` | 访问权限探测、适配器工厂、`UserDefaults`、系统外观、动画与计时器钩子；测试 / Preview 可整体替换 |
+| 组装根 | `App/AppModel.swift` | 持有各 Store，`perform(_:)` 是所有用户意图的唯一执行入口；投影 HUD / 命令面板 / 快捷键上下文 |
+| Stores | `Stores/DeckStore.swift` | 邮件数据与副作用：数据源切换、外部变化监听、乐观更新 + adapter 写回、正文补全、toast / notice 计时（不依赖 SwiftUI） |
+|  | `Stores/PreferencesStore.swift` | 持久化偏好；主题只有 `themePreference` 一个可写真相，`themeMode` 为推导值 |
+|  | `Stores/ShellState.swift` | 侧栏 / 命令面板 / 设置台开关 |
+| 命令系统 | `Commands/DeckCommand.swift` · `CommandCatalog.swift` · `KeyRouter.swift` | 所有意图的值类型枚举；HUD 与命令面板的唯一目录（纯函数）；全局快捷键路由表（纯函数，`NSEvent` 胶水在 `App/KeyboardShortcutMonitor.swift`） |
+| 界面区域 | `Features/{Sidebar,MailList,ReadingPane,CommandPalette,Settings,Overlays}/` | 每个区域 = `XxxViewModel`（只持有 `AppModel` 引用的 `struct`，读取经 Observation 穿透到 Store）+ 纯展示 View |
+| 设计系统 | `DesignSystem/` | 调色板、Liquid Glass 修饰器、Metal 丝绸背景、无框滚动条、HTML 邮件 WebView |
+
+### 测试安全网
+
+- `Tests/MailroomFeaturesTests/CharacterizationTests.swift`：行为金样（状态、HUD、命令面板、偏好持久化），文件在 `__Goldens__/`
+- `Tests/MailroomFeaturesTests/SnapshotTests.swift`：离屏渲染逐像素比对，基线在 `__Snapshots__/`（失败时差异图写入 `$TMPDIR/mailroom-snapshot-failures/`）
+- 有意修改界面或行为时重新录制：`RECORD_SNAPSHOTS=1 RECORD_GOLDENS=1 swift test --filter MailroomFeaturesTests`
+- `KeyRouterTests` / `FeatureViewModelTests`：快捷键表与各 ViewModel 的单元测试
+
+### 已知问题（重构中刻意保持原行为；1、2 已由 `KnownIssueTests` 钉住）
+
+1. 拍板 / 撤销为乐观更新，adapter 写回失败时只提示错误、不回滚本地状态。
+2. 首次以「跟随系统」启动时，解析后的主题会写入旧键 `mailroom-theme`，下次启动被固定为显式浅 / 深色。
+3. 切换数据源时不会取消旧 adapter 仍在进行的 `fetchDeck` / `hydrate`，迟到的旧结果可能覆盖新数据。
+4. 键盘监听（`NSEvent` local monitor）安装后从不移除。
 
 ## 诊断与评测导出 CLI（只读）
 

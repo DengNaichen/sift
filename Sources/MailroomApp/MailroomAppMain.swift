@@ -4,13 +4,13 @@ import MailroomFeatures
 
 @main
 struct MailroomAppMain: App {
-    @State private var vm = DeckViewModel()
+    @State private var app = AppModel(environment: .live)
 
     init() {
         NSApplication.shared.setActivationPolicy(.regular)
     }
 
     var body: some Scene {
-        MailroomScene(vm: vm)
+        MailroomScene(app: app)
     }
 }

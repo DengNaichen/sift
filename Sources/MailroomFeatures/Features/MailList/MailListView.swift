@@ -3,23 +3,15 @@ import MailroomCore
 
 struct MailListView: View {
     @Environment(\.palette) private var p
-    let vm: DeckViewModel
-
-    private var folderTitle: String {
-        FolderDef.all.first(where: { $0.id == vm.state.folder })?.label ?? "邮件"
-    }
-
-    private var showAccountBadge: Bool {
-        vm.accounts.count > 1 && vm.state.accountScope == .all
-    }
+    let model: MailListViewModel
 
     var body: some View {
         VStack(spacing: 0) {
             // 列表栏顶：44pt 与右侧阅读工具栏严格对齐
             HStack(spacing: 8) {
-                if vm.sidebarCollapsed {
+                if model.sidebarCollapsed {
                     Button {
-                        vm.toggleSidebar()
+                        model.perform(.toggleSidebar)
                     } label: {
                         Image(systemName: "sidebar.left")
                             .font(.system(size: 12.5, weight: .medium))
@@ -32,21 +24,21 @@ struct MailListView: View {
                     .transition(.move(edge: .leading).combined(with: .opacity))
                 }
 
-                Text(folderTitle)
+                Text(model.folderTitle)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(p.ink)
                     .lineLimit(1)
 
-                Text("\(vm.visibleRows.count)")
+                Text("\(model.rowCount)")
                     .font(.system(size: 11.5, design: .monospaced))
                     .monospacedDigit()
                     .foregroundStyle(p.ink3)
 
                 Spacer()
 
-                if let acc = vm.activeAccount {
+                if let acc = model.activeAccount {
                     Button {
-                        vm.setAccountScope(.all)
+                        model.perform(.setAccountScope(.all))
                     } label: {
                         HStack(spacing: 5) {
                             Circle()
@@ -71,10 +63,10 @@ struct MailListView: View {
             .padding(.top, 4)
             .frame(height: 44)
 
-            if vm.visibleRows.isEmpty {
+            if model.isEmpty {
                 VStack {
                     Spacer()
-                    Text(vm.state.folder.isInboxFolder ? "队列已清空 ✨" : "当前列表为空")
+                    Text(model.emptyText)
                         .font(.system(size: 12.5))
                         .foregroundStyle(p.ink3)
                     Spacer()
@@ -84,31 +76,26 @@ struct MailListView: View {
                 ScrollViewReader { proxy in
                     ScrollView(.vertical) {
                         LazyVStack(spacing: 0) {
-                            ForEach(vm.visibleRows) { row in
-                                let selected = (row.id == vm.state.focusId)
-                                let unread = row.isInboxOrKept && !vm.state.readIds.contains(row.id)
+                            ForEach(model.rows) { item in
                                 MailListRowView(
-                                    row: row,
-                                    selected: selected,
-                                    unread: unread,
-                                    showAccountBadge: showAccountBadge,
+                                    item: item,
                                     onSelect: {
-                                        vm.selectRow(row.id)
+                                        model.perform(.select(item.id))
                                     },
                                     onQuickAction: { action in
-                                        vm.actOnCard(action, id: row.id)
+                                        model.perform(.card(action, item.id))
                                     },
                                     onQuickRescue: {
-                                        vm.rescueRow(row.id)
+                                        model.perform(.rescue(item.id))
                                     }
                                 )
-                                .id(row.id)
+                                .id(item.id)
                             }
                         }
                         .padding(.vertical, 4)
                         .borderlessScroller()
                     }
-                    .onChange(of: vm.state.focusId) { _, newId in
+                    .onChange(of: model.focusId) { _, newId in
                         guard let newId else { return }
                         withAnimation(.snappy(duration: 0.16)) {
                             proxy.scrollTo(newId, anchor: nil)
@@ -128,38 +115,18 @@ struct MailListView: View {
 
 private struct MailListRowView: View {
     @Environment(\.palette) private var p
-    let row: FolderRow
-    let selected: Bool
-    let unread: Bool
-    let showAccountBadge: Bool
+    let item: MailListRowModel
     let onSelect: () -> Void
     let onQuickAction: (CardAction) -> Void
     let onQuickRescue: () -> Void
 
     @State private var isHovered = false
 
-    private var content: MailContent { row.content }
-
-    private var evidence: String? {
-        switch row {
-        case .inbox(let mail), .kept(let mail):
-            return Excerpt.evidenceOf(mail)
-        case .handled:
-            return nil
-        }
-    }
-
-    private var previewText: String {
-        let raw = evidence ?? Excerpt.openingLines(content.plainText, maxLength: 96)
-        return raw.isEmpty ? "（无正文摘要）" : raw
-    }
-
-    private var timestamp: Date {
-        switch row {
-        case .handled(let item): return item.handledAt
-        case .inbox, .kept: return content.receivedAt
-        }
-    }
+    private var row: FolderRow { item.row }
+    private var selected: Bool { item.selected }
+    private var unread: Bool { item.unread }
+    private var showAccountBadge: Bool { item.showAccountBadge }
+    private var content: MailContent { item.content }
 
     private var leadingDotColor: Color? {
         if unread {
@@ -248,7 +215,7 @@ private struct MailListRowView: View {
                         .foregroundStyle(p.ink3)
                     }
 
-                    Text(MailFormatting.formatTime(timestamp))
+                    Text(item.timestampText)
                         .font(.system(size: 11, design: .monospaced))
                         .monospacedDigit()
                         .foregroundStyle(p.ink3)
@@ -267,7 +234,7 @@ private struct MailListRowView: View {
 
             // 第 3 行：精炼单行摘要 + 右下角已处理分类微标
             HStack(spacing: 6) {
-                Text(previewText)
+                Text(item.previewText)
                     .font(.system(size: 11.5))
                     .foregroundStyle(p.ink3)
                     .lineLimit(1)

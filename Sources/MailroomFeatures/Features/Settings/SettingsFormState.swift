@@ -4,12 +4,6 @@ import Observation
 import SwiftUI
 import MailroomCore
 
-public enum ThemePreference: String, CaseIterable, Sendable {
-    case system
-    case light
-    case dark
-}
-
 public enum SettingsSection: String, CaseIterable, Identifiable, Sendable {
     case accounts
     case triage
@@ -214,10 +208,10 @@ public enum RemoteImageChoice: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-/// Settings 页面 UI 壳状态（暂不改动后端分类与存储逻辑，负责完整呈现交互形态）
+/// 设置页表单状态（暂不改动后端分类与存储逻辑，负责完整呈现交互形态）
 @MainActor
 @Observable
-public final class SettingsShellState {
+public final class SettingsFormState {
     public var activeSection: SettingsSection = .accounts
 
     // 1. 邮箱与连接

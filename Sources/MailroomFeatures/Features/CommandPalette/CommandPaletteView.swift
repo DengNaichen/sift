@@ -5,20 +5,13 @@ struct CommandPaletteView: View {
     @Environment(\.palette) private var p
     let commands: [PaletteCommand]
     let onClose: () -> Void
+    let onRun: (DeckCommand) -> Void
 
-    @State private var query: String = ""
-    @State private var activeIndex: Int = 0
+    @State private var model = CommandPaletteViewModel()
     @FocusState private var inputFocused: Bool
 
-    private var filtered: [PaletteCommand] {
-        let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !q.isEmpty else { return commands }
-        return commands.filter { cmd in
-            "\(cmd.title) \(cmd.subtitle ?? "") \(cmd.keywords) \(cmd.group)"
-                .lowercased()
-                .contains(q)
-        }
-    }
+    private var filtered: [PaletteCommand] { model.filtered(commands) }
+    private var activeIndex: Int { model.activeIndex }
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -34,7 +27,7 @@ struct CommandPaletteView: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(p.ink3)
 
-                    TextField("搜索邮件或输入命令…", text: $query)
+                    TextField("搜索邮件或输入命令…", text: $model.query)
                         .textFieldStyle(.plain)
                         .font(.system(size: 14.5))
                         .foregroundStyle(p.ink)
@@ -55,14 +48,15 @@ struct CommandPaletteView: View {
                     ScrollView(.vertical) {
                         LazyVStack(alignment: .leading, spacing: 2) {
                             if filtered.isEmpty {
-                                Text("没有匹配「\(query)」的邮件或命令")
+                                Text("没有匹配「\(model.query)」的邮件或命令")
                                     .font(.system(size: 13))
                                     .foregroundStyle(p.ink3)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 36)
                             } else {
+                                let filtered = self.filtered
                                 ForEach(Array(filtered.enumerated()), id: \.element.id) { idx, cmd in
-                                    let showGroup = (idx == 0) || (filtered[idx - 1].group != cmd.group)
+                                    let showGroup = CommandPaletteViewModel.showsGroupHeader(at: idx, in: filtered)
                                     if showGroup {
                                         Text(cmd.group)
                                             .font(.system(size: 11, weight: .medium))
@@ -74,7 +68,7 @@ struct CommandPaletteView: View {
 
                                     Button {
                                         onClose()
-                                        cmd.run()
+                                        onRun(cmd.command)
                                     } label: {
                                         HStack(spacing: 10) {
                                             Image(systemName: cmd.systemImage)
@@ -133,11 +127,11 @@ struct CommandPaletteView: View {
             .shadow(color: .black.opacity(p.mode == .dark ? 0.30 : 0.10), radius: 26, y: 12)
             .padding(.top, 92)
             .onKeyPress(.downArrow) {
-                activeIndex = min(max(0, filtered.count - 1), activeIndex + 1)
+                model.moveDown(count: filtered.count)
                 return .handled
             }
             .onKeyPress(.upArrow) {
-                activeIndex = max(0, activeIndex - 1)
+                model.moveUp()
                 return .handled
             }
             .onKeyPress(.escape) {
@@ -145,18 +139,14 @@ struct CommandPaletteView: View {
                 return .handled
             }
         }
-        .onChange(of: query) { _, _ in
-            activeIndex = 0
-        }
         .onAppear {
             inputFocused = true
         }
     }
 
     private func executeActive() {
-        guard activeIndex >= 0 && activeIndex < filtered.count else { return }
-        let cmd = filtered[activeIndex]
+        guard let cmd = model.activeCommand(in: filtered) else { return }
         onClose()
-        cmd.run()
+        onRun(cmd.command)
     }
 }

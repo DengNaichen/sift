@@ -3,23 +3,26 @@ import MailroomCore
 
 struct ReadingPaneView: View {
     @Environment(\.palette) private var p
-    let vm: DeckViewModel
+    let model: ReadingPaneViewModel
     @State private var webContentHeight: CGFloat = 220
     @State private var openMailHovered = false
     @Namespace private var topGlassNS
     @Namespace private var bottomGlassNS
 
-    private var activeRow: FolderRow? { vm.activeRow }
-    private var content: MailContent? { activeRow?.content }
+    private var activeRow: FolderRow? { model.activeRow }
+    private var content: MailContent? { model.content }
 
     var body: some View {
         ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
                 // 1. 权限引导或操作错误提示条（非阻塞）
-                if case .fullDiskAccessRequired = vm.accessStatus, vm.sourceMode == .demo {
+                switch model.banner {
+                case .fullDiskAccessOnboarding:
                     fdaOnboardingBanner
-                } else if let err = vm.errorMessage {
+                case .error(let err):
                     errorBanner(err)
+                case .none:
+                    EmptyView()
                 }
 
                 // 2. 全高沉浸阅读区 + 顶部悬浮 Liquid Glass 拍板胶囊组（向上滚动时正文从玻璃下方折射穿过）
@@ -31,20 +34,21 @@ struct ReadingPaneView: View {
                                     articleHeader(content: content)
                                         .id("mail-top")
 
-                                    if vm.hydratingIds.contains(content.id) {
+                                    if model.isHydrating(content.id) {
                                         hydratingBanner
                                     }
 
-                                    if let html = content.htmlBody, !html.isEmpty, !vm.preferPlainText {
-                                        if content.hasRemoteImages && !vm.allowedRemoteImageIds.contains(content.id) {
+                                    switch model.body(for: content) {
+                                    case .html(let html, let allowRemoteImages, let showsPrivacyBar):
+                                        if showsPrivacyBar {
                                             remoteImagePrivacyBar(for: content.id)
                                         }
 
                                         MailHTMLWebView(
                                             messageId: content.id,
                                             html: html,
-                                            allowRemoteImages: vm.allowedRemoteImageIds.contains(content.id),
-                                            themeMode: vm.themeMode,
+                                            allowRemoteImages: allowRemoteImages,
+                                            themeMode: model.themeMode,
                                             dynamicHeight: $webContentHeight
                                         )
                                         .frame(height: max(120, webContentHeight))
@@ -52,8 +56,8 @@ struct ReadingPaneView: View {
                                         .padding(.top, 20)
                                         .padding(.bottom, 108)
                                         .frame(maxWidth: 784, alignment: .leading)
-                                    } else {
-                                        PlainTextBodyView(text: content.plainText)
+                                    case .plain(let text):
+                                        PlainTextBodyView(text: text)
                                             .padding(.horizontal, 32)
                                             .padding(.top, 22)
                                             .padding(.bottom, 108)
@@ -64,11 +68,11 @@ struct ReadingPaneView: View {
                                 .borderlessScroller()
                             }
                             .onChange(of: content.id) { _, _ in
-                                vm.hydrateIfNeeded(for: content)
+                                model.hydrateIfNeeded(content)
                                 scrollToTop(proxy: proxy)
                             }
                             .onAppear {
-                                vm.hydrateIfNeeded(for: content)
+                                model.hydrateIfNeeded(content)
                                 scrollToTop(proxy: proxy)
                             }
                         }
@@ -84,21 +88,21 @@ struct ReadingPaneView: View {
             // 3. 底部悬浮撤销提示与快捷键胶囊 HUD（GlassEffectContainer 水滴聚拢）
             DeckGlassCluster(spacing: 16) {
                 VStack(spacing: 10) {
-                    if let toast = vm.state.toast {
+                    if let toast = model.toast {
                         UndoToastView(toast: toast) {
-                            _ = vm.undo()
+                            model.perform(.undo)
                         }
                         .deckGlassID("undo-toast", in: bottomGlassNS)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
-                    if vm.showKeyboardHUD {
-                        KeyboardHUDView(items: vm.hudItems)
+                    if model.showsKeyboardHUD {
+                        KeyboardHUDView(items: model.hudItems, onPerform: model.perform)
                             .deckGlassID("keyboard-hud", in: bottomGlassNS)
                     }
                 }
             }
-            .animation(.bouncy(duration: 0.34, extraBounce: 0.05), value: vm.state.toast)
-            .animation(.snappy(duration: 0.22), value: vm.showKeyboardHUD)
+            .animation(.bouncy(duration: 0.34, extraBounce: 0.05), value: model.toast)
+            .animation(.snappy(duration: 0.22), value: model.showsKeyboardHUD)
             .padding(.bottom, 14)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -117,8 +121,8 @@ struct ReadingPaneView: View {
 
     private var floatingTopToolbar: some View {
         HStack(spacing: 8) {
-            if let idx = vm.activeIndex {
-                Text("\(idx + 1) / \(vm.visibleRows.count)")
+            if let positionText = model.positionText {
+                Text(positionText)
                     .font(.system(size: 11.5, weight: .medium, design: .monospaced))
                     .monospacedDigit()
                     .foregroundStyle(p.ink2)
@@ -131,24 +135,24 @@ struct ReadingPaneView: View {
 
             DeckGlassCluster(spacing: 8) {
                 HStack(spacing: 7) {
-                    if activeRow != nil || !vm.state.undo.isEmpty {
+                    if model.showsTriageCapsule {
                         HStack(spacing: 2) {
                             if let row = activeRow {
                                 switch row {
                                 case .inbox:
                                     PaneToolbarButton(title: "归档", systemImage: "archivebox", help: "阅毕归档（Space）") {
-                                        vm.actOnCard(.archive)
+                                        model.perform(.card(.archive, nil))
                                     }
                                     PaneToolbarButton(title: "保留", systemImage: "flag", help: "重要保留（⇧K）") {
-                                        vm.actOnCard(.keep)
+                                        model.perform(.card(.keep, nil))
                                     }
                                     PaneToolbarButton(title: "推广", systemImage: "trash", help: "判为推广并移入废纸篓（⌫）") {
-                                        vm.actOnCard(.trash)
+                                        model.perform(.card(.trash, nil))
                                     }
 
                                 case .handled:
                                     PaneToolbarButton(title: "拉回待处理", systemImage: "arrow.uturn.backward", help: "拉回待处理（R）") {
-                                        vm.rescueFocused()
+                                        model.perform(.rescueFocused)
                                     }
 
                                 case .kept:
@@ -173,10 +177,10 @@ struct ReadingPaneView: View {
                             PaneToolbarButton(
                                 title: "撤销",
                                 systemImage: "arrow.uturn.backward",
-                                disabled: vm.state.undo.isEmpty,
+                                disabled: !model.canUndo,
                                 help: "撤销上一步（Z）"
                             ) {
-                                _ = vm.undo()
+                                model.perform(.undo)
                             }
                         }
                         .padding(.horizontal, 4)
@@ -188,7 +192,7 @@ struct ReadingPaneView: View {
 
                     if content != nil {
                         Button {
-                            vm.openFocusedInNativeMail()
+                            model.perform(.openInNativeMail)
                         } label: {
                             HStack(spacing: 4.5) {
                                 Text("Apple Mail")
@@ -226,7 +230,7 @@ struct ReadingPaneView: View {
                 .lineLimit(1)
             Spacer()
             Button("打开系统设置") {
-                MailStoreEnvironment.openFullDiskAccessSettings()
+                model.perform(.openFullDiskAccessSettings)
             }
             .buttonStyle(.plain)
             .font(.system(size: 11.5, weight: .medium))
@@ -237,7 +241,7 @@ struct ReadingPaneView: View {
             .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous).strokeBorder(p.lineStrong, lineWidth: 1))
 
             Button("重新连接") {
-                vm.recheckAccessAndSwitchToAppleMail()
+                model.perform(.switchToLive)
             }
             .buttonStyle(.plain)
             .font(.system(size: 11.5, weight: .medium))
@@ -265,7 +269,7 @@ struct ReadingPaneView: View {
                 .lineLimit(2)
             Spacer()
             Button("关闭") {
-                vm.dismissError()
+                model.perform(.dismissError)
             }
             .buttonStyle(.plain)
             .font(.system(size: 11.5))
@@ -306,7 +310,7 @@ struct ReadingPaneView: View {
                 .foregroundStyle(p.ink2)
             Spacer()
             Button {
-                vm.allowRemoteImages(for: messageId)
+                model.perform(.allowRemoteImages(messageId))
             } label: {
                 Text("显示图片")
                     .font(.system(size: 11.5, weight: .medium))
@@ -429,8 +433,8 @@ struct ReadingPaneView: View {
     private var emptyReadingArea: some View {
         VStack {
             Spacer()
-            if vm.state.folder.isInboxFolder {
-                InboxZeroView(vm: vm)
+            if model.isInboxFolder {
+                InboxZeroView(model: model.inboxZero)
                     .frame(maxWidth: 492)
             } else {
                 Text("该分拣夹当前没有邮件")
