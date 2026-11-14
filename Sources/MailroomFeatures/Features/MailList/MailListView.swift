@@ -107,9 +107,6 @@ struct MailListView: View {
         .frame(width: 352)
         .frame(maxHeight: .infinity, alignment: .top)
         .background(p.paper)
-        .overlay(alignment: .trailing) {
-            Rectangle().fill(p.line).frame(width: 1)
-        }
     }
 }
 

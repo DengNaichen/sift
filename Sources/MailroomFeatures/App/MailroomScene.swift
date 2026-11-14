@@ -63,7 +63,7 @@ struct RootThemeHostView: View {
     }
 }
 
-/// 三栏工作台布局：左侧导航（或设置导航）+ 内嵌纸页（列表 + 阅读区，或设置工作区）+ 顶层浮层
+/// 三栏分栏工作台布局：左侧原生毛玻璃边栏（206pt + 1pt 通顶分割线）+ 右侧通顶铺满工作区（列表 + 阅读区，或设置工作区）+ 顶层浮层
 struct RootDeckView: View {
     @Environment(\.palette) private var p
     let model: RootViewModel
@@ -75,19 +75,21 @@ struct RootDeckView: View {
 
     private var showLeftSidebar: Bool { model.showLeftSidebar }
     private var canPeekSidebar: Bool { model.canPeekSidebar }
+    private static let sidebarWidth: CGFloat = 206
+    private static let mailListWidth: CGFloat = 352
 
     var body: some View {
-        ZStack(alignment: .top) {
-            // 窗口底层桌面壁纸漫反射透光材质（展开侧栏时左侧 218pt 画布透底，收起侧栏时铺满 p.canvas）
+        ZStack(alignment: .topLeading) {
+            // 窗口底层：左侧 206pt 原生毛玻璃透底，右侧实心 p.paper 通顶铺满，无任何错位拼缝
             HStack(spacing: 0) {
                 ZStack {
                     WindowSidebarBackdrop(mode: p.mode)
                     p.canvas.opacity(p.mode == .dark ? 0.24 : 0.18)
                 }
-                .frame(width: showLeftSidebar ? 218 : 0)
+                .frame(width: showLeftSidebar ? Self.sidebarWidth : 0)
                 .clipped()
 
-                p.canvas
+                p.paper
             }
             .ignoresSafeArea()
 
@@ -99,16 +101,16 @@ struct RootDeckView: View {
                         SidebarView(model: model.sidebar, isPeek: false)
                     }
                 }
-                .padding(.top, 6)
-                .frame(width: 206)
+                .padding(.top, 4)
+                .frame(width: Self.sidebarWidth)
                 .frame(maxHeight: .infinity, alignment: .top)
-                .frame(width: showLeftSidebar ? 206 : 0, alignment: .trailing)
+                .frame(width: showLeftSidebar ? Self.sidebarWidth : 0, alignment: .trailing)
                 .clipped()
                 .opacity(showLeftSidebar ? 1 : 0)
                 .allowsHitTesting(showLeftSidebar)
                 .accessibilityHidden(!showLeftSidebar)
 
-                // Linear 式内嵌工作台纸页（顶部间距恒定为 6pt，收起/展开侧边栏或进入设置时原地切换）
+                // Apple 原生 SplitView 右侧工作区：无圆角无外边距，直接贴紧分割线通顶铺满
                 Group {
                     if model.settingsOpen {
                         SettingsWorkspaceView(model: model.settings)
@@ -120,29 +122,25 @@ struct RootDeckView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .background(p.paper)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(p.line, lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(p.mode == .dark ? 0.35 : 0.035), radius: 3, y: 1)
-                .padding(.top, 6)
-                .padding(.bottom, 6)
-                .padding(.trailing, 6)
-                .padding(.leading, showLeftSidebar ? 0 : 6)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .overlay(alignment: .topLeading) {
-                peekSidebarOverlay
-            }
             .blur(radius: model.paletteOpen ? 5 : 0)
             .allowsHitTesting(!model.paletteOpen)
             .animation(.easeOut(duration: 0.16), value: model.paletteOpen)
 
+            splitDividersOverlay
+                .blur(radius: model.paletteOpen ? 5 : 0)
+                .animation(.easeOut(duration: 0.16), value: model.paletteOpen)
+
+            peekSidebarOverlay
+                .blur(radius: model.paletteOpen ? 5 : 0)
+                .allowsHitTesting(!model.paletteOpen)
+                .animation(.easeOut(duration: 0.16), value: model.paletteOpen)
+
             if let noticeURL = model.nativeNoticeURL {
                 NativeNoticeBanner(url: noticeURL)
                     .padding(.top, 16)
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
 
@@ -183,6 +181,27 @@ struct RootDeckView: View {
             keyMonitorInstalled = true
             KeyboardShortcutMonitor.install(app: model.app)
         }
+    }
+
+    @ViewBuilder
+    private var splitDividersOverlay: some View {
+        HStack(spacing: 0) {
+            if showLeftSidebar {
+                Color.clear.frame(width: Self.sidebarWidth - 1)
+                Rectangle()
+                    .fill(p.lineStrong)
+                    .frame(width: 1)
+            }
+            if !model.settingsOpen {
+                Color.clear.frame(width: Self.mailListWidth - 1)
+                Rectangle()
+                    .fill(p.line)
+                    .frame(width: 1)
+            }
+            Spacer(minLength: 0)
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
     }
 
     @ViewBuilder

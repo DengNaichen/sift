@@ -139,23 +139,32 @@ private struct ThemePreviewCardView: View {
     }
 
     private func miniHalf(canvas: Color, paper: Color, bar: Color, active: Color) -> some View {
-        ZStack {
-            canvas
-            RoundedRectangle(cornerRadius: 3.5, style: .continuous)
-                .fill(paper)
-                .overlay(
-                    VStack(alignment: .leading, spacing: 4) {
-                        RoundedRectangle(cornerRadius: 2.5)
-                            .fill(active)
-                            .frame(height: 10)
-                        RoundedRectangle(cornerRadius: 1.5)
-                            .fill(bar.opacity(0.18))
-                            .frame(width: 34, height: 3.5)
-                        Spacer(minLength: 0)
-                    }
-                    .padding(5)
-                )
-                .padding(5)
+        HStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 3.5) {
+                RoundedRectangle(cornerRadius: 1.5).fill(bar.opacity(0.2)).frame(width: 14, height: 3)
+                RoundedRectangle(cornerRadius: 1.5).fill(bar.opacity(0.16)).frame(width: 18, height: 3)
+                Spacer(minLength: 0)
+            }
+            .padding(5)
+            .frame(width: 28, alignment: .leading)
+            .background(canvas)
+
+            Rectangle()
+                .fill(bar.opacity(0.10))
+                .frame(width: 1)
+
+            VStack(alignment: .leading, spacing: 4) {
+                RoundedRectangle(cornerRadius: 2.5)
+                    .fill(active)
+                    .frame(height: 10)
+                RoundedRectangle(cornerRadius: 1.5)
+                    .fill(bar.opacity(0.18))
+                    .frame(width: 34, height: 3.5)
+                Spacer(minLength: 0)
+            }
+            .padding(6)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(paper)
         }
     }
 
@@ -168,24 +177,25 @@ private struct ThemePreviewCardView: View {
             }
             .padding(7)
             .frame(width: 44, alignment: .leading)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .background(canvas)
 
-            RoundedRectangle(cornerRadius: 4, style: .continuous)
-                .fill(paper)
-                .overlay(
-                    VStack(alignment: .leading, spacing: 5) {
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(active)
-                            .frame(height: 10)
-                        RoundedRectangle(cornerRadius: 1.5)
-                            .fill(ink.opacity(0.18))
-                            .frame(width: 68, height: 3.5)
-                        Spacer(minLength: 0)
-                    }
-                    .padding(7)
-                )
-                .padding(.vertical, 4)
-                .padding(.trailing, 4)
+            Rectangle()
+                .fill(ink.opacity(0.10))
+                .frame(width: 1)
+
+            VStack(alignment: .leading, spacing: 5) {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(active)
+                    .frame(height: 10)
+                RoundedRectangle(cornerRadius: 1.5)
+                    .fill(ink.opacity(0.18))
+                    .frame(width: 68, height: 3.5)
+                Spacer(minLength: 0)
+            }
+            .padding(8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(paper)
         }
-        .background(canvas)
     }
 }
