@@ -10,16 +10,30 @@ let fixtureNow = Date(timeIntervalSince1970: 1_736_913_600) // 2025-01-15 12:00 
 @MainActor
 func makeTestEnvironment(
     defaults: UserDefaults,
+    secretStore: any SecretStore = InMemorySecretStore(),
     access: MailAccessStatus = .fullDiskAccessRequired(expectedPath: "/Users/test/Library/Mail/V10/MailData/Envelope Index"),
     systemIsDark: Bool = false
 ) -> AppEnvironment {
-    AppEnvironment(
+    var simulatedCacheSize = "14.2 MB"
+    return AppEnvironment(
         checkAccess: { access },
         makeLiveAdapter: { nil },
         makeDemoAdapter: { MockMailAdapter(now: fixtureNow) },
         defaults: defaults,
+        secretStore: secretStore,
         systemIsDark: { systemIsDark },
         openFullDiskAccessSettings: {},
+        updateClassifierConfiguration: { _ in },
+        testAIConnection: { _, _, apiKey in
+            if apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                throw GeminiDecisionsError.missingAPIKey
+            }
+            return 240.0
+        },
+        rebuildClassifierCache: {
+            simulatedCacheSize = "0 KB"
+        },
+        classifierCacheSizeText: { simulatedCacheSize },
         animate: { _, body in body() },
         sleep: { nanoseconds in try await Task.sleep(nanoseconds: nanoseconds) }
     )

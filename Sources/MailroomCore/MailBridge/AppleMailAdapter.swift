@@ -90,10 +90,11 @@ public actor AppleMailAdapter: MailAdapter {
     }
 
     private let mailVDir: URL
-    private let classifier: any MailClassifier
+    private var classifier: any MailClassifier
     private let scriptExecutor: any AppleMailExecutor
     private let mutationLedger: MutationLedger
     private let accountsDBPath: String?
+    private let cacheDBFilePath: String
     private let extraOwnerAddresses: Set<String>
     private let maxInboxFetch: Int
 
@@ -144,7 +145,9 @@ public actor AppleMailAdapter: MailAdapter {
                 .map(ConversationResolver.normalizeEmailAddress)
                 .filter { !$0.isEmpty }
         )
-        self.cacheDB = try Self.openOrCreateCacheDB(atPath: cacheDBPath)
+        let resolvedCachePath = Self.resolveCacheDBPath(customPath: cacheDBPath)
+        self.cacheDBFilePath = resolvedCachePath
+        self.cacheDB = try Self.openOrCreateCacheDB(atPath: resolvedCachePath)
         self.mutationLedger = try MutationLedger(
             dbPath: mutationLedgerDBPath ?? MutationLedger.defaultDatabasePath(),
             echoSuppressionWindow: echoSuppressionWindow,
@@ -152,17 +155,61 @@ public actor AppleMailAdapter: MailAdapter {
         )
     }
 
-    private static func openOrCreateCacheDB(atPath customPath: String? = nil) throws -> SQLiteConnection {
-        let dbPath: String
-        if let customPath {
-            dbPath = customPath
+    public func updateClassifier(_ newClassifier: any MailClassifier) {
+        self.classifier = newClassifier
+    }
+
+    public func updateClassifierConfiguration(_ configuration: SiftClassifierConfiguration) {
+        if let hybrid = classifier as? HybridMailClassifier {
+            hybrid.updateConfiguration(configuration)
         } else {
-            let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            dbPath = appSupport
-                .appendingPathComponent("MailroomDeck", isDirectory: true)
-                .appendingPathComponent("bridge_cache_v1.sqlite")
-                .path
+            classifier = RuleBasedClassifier(preferences: configuration.preferences)
         }
+    }
+
+    public func updateClassifierPreferences(_ preferences: SiftPreferences) {
+        if let hybrid = classifier as? HybridMailClassifier {
+            hybrid.updatePreferences(preferences)
+        } else {
+            classifier = RuleBasedClassifier(preferences: preferences)
+        }
+    }
+
+    public func clearCaches(includeParsedMailCache: Bool = false) throws {
+        if let hybrid = classifier as? HybridMailClassifier {
+            try hybrid.clearCache()
+        }
+        if includeParsedMailCache, let cacheDB {
+            try cacheDB.execute("DELETE FROM parsed_emlx_v3;")
+            try? cacheDB.execute("PRAGMA wal_checkpoint(TRUNCATE);")
+            try? cacheDB.execute("VACUUM;")
+        }
+    }
+
+    public func totalCacheByteSize(includeParsedMailCache: Bool = true) -> Int64 {
+        var total: Int64 = 0
+        if let hybrid = classifier as? HybridMailClassifier {
+            total += hybrid.cacheByteSize()
+        }
+        if includeParsedMailCache {
+            total += DecisionSignalCache.fileTreeByteSize(forSQLitePath: cacheDBFilePath)
+        }
+        return total
+    }
+
+    public static func defaultCacheDBPath() -> String {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        return appSupport
+            .appendingPathComponent("MailroomDeck", isDirectory: true)
+            .appendingPathComponent("bridge_cache_v1.sqlite")
+            .path
+    }
+
+    private static func resolveCacheDBPath(customPath: String?) -> String {
+        customPath ?? defaultCacheDBPath()
+    }
+
+    private static func openOrCreateCacheDB(atPath dbPath: String) throws -> SQLiteConnection {
         let conn = try SQLiteConnection(readWritePath: dbPath)
         try? conn.execute("DROP TABLE IF EXISTS parsed_emlx_v2;")
         try conn.execute("""
@@ -445,8 +492,13 @@ public actor AppleMailAdapter: MailAdapter {
             self.cachedOrDiskPlainText(rowId: rowId, physicalMailboxId: mbId)
         }) ?? [:]
 
-        var queue: [MailItem] = []
-        var handled: [HandledItem] = []
+        enum CandidateDispositionSlot {
+            case rescued(MailItem)
+            case needsClassification(msgId: MessageId, content: MailContent, receivedDate: Date, signals: RawMailSignals)
+        }
+
+        var slots: [CandidateDispositionSlot] = []
+        slots.reserveCapacity(visibleCandidates.count)
         var emittedIds = Set<MessageId>()
 
         for candidate in visibleCandidates {
@@ -498,59 +550,112 @@ public actor AppleMailAdapter: MailAdapter {
                 hasRemoteImages: parsed.hasRemoteImages
             )
             liveContents[msgId] = content
-
             emittedIds.insert(msgId)
 
             if rescuedToQueueIds.contains(msgId) || ledger == "rescued" {
                 let prevCat = handledItemsCache[msgId]?.category ?? "自动分拣"
                 let prevProb = handledItemsCache[msgId]?.probability ?? 0.92
-                queue.append(
-                    MailItem(
-                        content: content,
-                        meta: DecisionMeta(
-                            kind: .rescued,
-                            badge: "你拉回的 · 原判\(prevCat)",
-                            confidence: prevProb
+                slots.append(
+                    .rescued(
+                        MailItem(
+                            content: content,
+                            meta: DecisionMeta(
+                                kind: .rescued,
+                                badge: "你拉回的 · 原判\(prevCat)",
+                                confidence: prevProb
+                            )
                         )
                     )
                 )
                 continue
             }
 
-            let outcome = classifier.classify(
-                RawMailSignals(
+            let rawSignals = RawMailSignals(
+                content: content,
+                hasListUnsubscribe: parsed.hasUnsub || r.hasUnsubType,
+                hasListId: parsed.hasListId || r.hasListHash,
+                isReply: parsed.isReply,
+                isAutoSubmitted: parsed.isAuto,
+                sqlAutomatedFlag: r.sqlAutomated,
+                conversation: convCtx,
+                sentByOwner: msgSentByOwner,
+                isPartial: parsed.isPartial,
+                isTruncated: parsed.isTruncated || parsed.plainText.isEmpty,
+                unloadedHtmlImages: parsed.unloadedHtmlImages,
+                bodyIsImageOnly: parsed.bodyIsImageOnly,
+                isFlagged: r.flagged,
+                isBoilerplateStub: parsed.isBoilerplateStub
+            )
+            slots.append(
+                .needsClassification(
+                    msgId: msgId,
                     content: content,
-                    hasListUnsubscribe: parsed.hasUnsub || r.hasUnsubType,
-                    hasListId: parsed.hasListId || r.hasListHash,
-                    isReply: parsed.isReply,
-                    isAutoSubmitted: parsed.isAuto,
-                    sqlAutomatedFlag: r.sqlAutomated,
-                    conversation: convCtx,
-                    sentByOwner: msgSentByOwner,
-                    isPartial: parsed.isPartial,
-                    isTruncated: parsed.isTruncated || parsed.plainText.isEmpty,
-                    unloadedHtmlImages: parsed.unloadedHtmlImages,
-                    bodyIsImageOnly: parsed.bodyIsImageOnly,
-                    isFlagged: r.flagged,
-                    isBoilerplateStub: parsed.isBoilerplateStub
+                    receivedDate: receivedDate,
+                    signals: rawSignals
                 )
             )
+        }
 
-            switch outcome {
-            case .triage(let meta):
-                queue.append(MailItem(content: content, meta: meta))
-            case .autoHandled(let disposition, let category, let probability):
-                // Shadow Triage：自动判为通知/推广的收件箱邮件归入「已分拣」视图供检视或拉回，不擅自篡改真邮箱
-                let item = HandledItem(
-                    content: content,
-                    disposition: disposition,
-                    category: category,
-                    probability: probability,
-                    handledAt: receivedDate,
-                    manual: false
-                )
-                handledItemsCache[msgId] = item
-                handled.append(item)
+        let currentClassifier = self.classifier
+        var outcomesBySlot: [Int: ClassificationOutcome] = [:]
+        outcomesBySlot.reserveCapacity(slots.count)
+
+        let shouldClassifyAsync: Bool = {
+            if let hybrid = currentClassifier as? HybridMailClassifier {
+                return hybrid.configuration.engineMode != .rules
+            }
+            return (currentClassifier is any AsyncMailClassifier) && !(currentClassifier is RuleBasedClassifier)
+        }()
+
+        if shouldClassifyAsync, let asyncClassifier = currentClassifier as? any AsyncMailClassifier {
+            let indexedInputs: [(Int, RawMailSignals)] = slots.enumerated().compactMap { index, slot in
+                guard case .needsClassification(_, _, _, let signals) = slot else { return nil }
+                return (index, signals)
+            }
+            await withTaskGroup(of: (Int, ClassificationOutcome).self) { group in
+                for (index, signals) in indexedInputs {
+                    group.addTask {
+                        let outcome = await asyncClassifier.classifyAsync(signals)
+                        return (index, outcome)
+                    }
+                }
+                for await (index, outcome) in group {
+                    outcomesBySlot[index] = outcome
+                }
+            }
+        } else {
+            for (index, slot) in slots.enumerated() {
+                if case .needsClassification(_, _, _, let signals) = slot {
+                    outcomesBySlot[index] = currentClassifier.classify(signals)
+                }
+            }
+        }
+
+        var queue: [MailItem] = []
+        var handled: [HandledItem] = []
+
+        for (index, slot) in slots.enumerated() {
+            switch slot {
+            case .rescued(let rescuedItem):
+                queue.append(rescuedItem)
+            case .needsClassification(let msgId, let content, let receivedDate, let signals):
+                let outcome = outcomesBySlot[index] ?? currentClassifier.classify(signals)
+                switch outcome {
+                case .triage(let meta):
+                    queue.append(MailItem(content: content, meta: meta))
+                case .autoHandled(let disposition, let category, let probability):
+                    // Shadow Triage：自动判为通知/推广的收件箱邮件归入「已分拣」视图供检视或拉回，不擅自篡改真邮箱
+                    let item = HandledItem(
+                        content: content,
+                        disposition: disposition,
+                        category: category,
+                        probability: probability,
+                        handledAt: receivedDate,
+                        manual: false
+                    )
+                    handledItemsCache[msgId] = item
+                    handled.append(item)
+                }
             }
         }
 

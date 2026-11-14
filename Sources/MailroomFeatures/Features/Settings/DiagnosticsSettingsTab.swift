@@ -59,7 +59,7 @@ struct DiagnosticsSettingsTabView: View {
                         SettingsRowView(title: "连接诊断") {
                             HStack(spacing: 6) {
                                 QuietActionButton(title: "重新自检") {
-                                    s.showTransientFeedback("自检预览完成")
+                                    s.refreshDiagnostics()
                                 }
                                 QuietActionButton(title: "复制报告") {
                                     s.showTransientFeedback("复制报告将在接入诊断逻辑后启用")
@@ -76,7 +76,7 @@ struct DiagnosticsSettingsTabView: View {
                                         s.confirmingCacheRebuild = false
                                     }
                                     QuietActionButton(title: "确认重建", destructiveText: true) {
-                                        s.confirmCacheRebuildPreview()
+                                        s.confirmCacheRebuild()
                                     }
                                 }
                             } else {
@@ -96,6 +96,9 @@ struct DiagnosticsSettingsTabView: View {
                     }
                 }
             }
+        }
+        .onAppear {
+            s.refreshDiagnostics(silent: true)
         }
     }
 

@@ -27,14 +27,21 @@ public final class DeckStore {
     private var adapter: any MailAdapter
 
     @ObservationIgnored private let environment: AppEnvironment
+    @ObservationIgnored private var latestClassifierConfiguration: SiftClassifierConfiguration
     @ObservationIgnored private var watchTask: Task<Void, Never>?
+    @ObservationIgnored private var resyncTask: Task<Void, Never>?
     @ObservationIgnored private var noticeTask: Task<Void, Never>?
     @ObservationIgnored private var toastTask: Task<Void, Never>?
     @ObservationIgnored private var rescuingIds: Set<MessageId> = []
     @ObservationIgnored private var attemptedHydrationIds: Set<MessageId> = []
 
-    public init(environment: AppEnvironment) {
+    public init(
+        environment: AppEnvironment,
+        initialClassifierConfiguration: SiftClassifierConfiguration = SiftClassifierConfiguration()
+    ) {
         self.environment = environment
+        self.latestClassifierConfiguration = initialClassifierConfiguration
+        environment.updateClassifierConfiguration(initialClassifierConfiguration)
         let status = environment.checkAccess()
         self.accessStatus = status
         if case .ready = status, let live = environment.makeLiveAdapter() {
@@ -93,18 +100,67 @@ public final class DeckStore {
         isSyncing = true
         defer { isSyncing = false }
         do {
+            if let appleAdapter = adapter as? AppleMailAdapter {
+                await appleAdapter.updateClassifierConfiguration(latestClassifierConfiguration)
+            }
             let snapshot = try await adapter.fetchDeck()
+            guard !Task.isCancelled else { return }
             if initial {
                 apply(.loaded(snapshot))
             } else {
                 apply(.externalSynced(snapshot))
             }
+        } catch is CancellationError {
+            return
         } catch {
-            errorMessage = error.localizedDescription
+            if !Task.isCancelled {
+                errorMessage = error.localizedDescription
+            }
         }
     }
 
+    public func updateClassifierConfiguration(_ configuration: SiftClassifierConfiguration) {
+        latestClassifierConfiguration = configuration
+        environment.updateClassifierConfiguration(configuration)
+
+        resyncTask?.cancel()
+        guard sourceMode == .appleMail else { return }
+
+        resyncTask = Task { [weak self] in
+            guard let self, !Task.isCancelled else { return }
+            if let appleAdapter = self.adapter as? AppleMailAdapter {
+                await appleAdapter.updateClassifierConfiguration(configuration)
+            }
+            guard !Task.isCancelled else { return }
+            await self.reloadSnapshot(initial: false)
+        }
+    }
+
+    public func refreshLiveAdapterForBridgeSettingsChange() {
+        guard sourceMode == .appleMail else { return }
+        environment.updateClassifierConfiguration(latestClassifierConfiguration)
+        if let live = environment.makeLiveAdapter() {
+            resyncTask?.cancel()
+            self.adapter = live
+            self.attemptedHydrationIds.removeAll()
+            self.hydratingIds.removeAll()
+            startWatchingAndLoad()
+        }
+    }
+
+    public func rebuildCaches() async throws -> String {
+        try await environment.rebuildClassifierCache()
+        if let appleAdapter = adapter as? AppleMailAdapter {
+            try await appleAdapter.clearCaches(includeParsedMailCache: true)
+        }
+        if sourceMode == .appleMail {
+            await reloadSnapshot(initial: false)
+        }
+        return environment.classifierCacheSizeText()
+    }
+
     public func recheckAccessAndSwitchToAppleMail() {
+        environment.updateClassifierConfiguration(latestClassifierConfiguration)
         let status = environment.checkAccess()
         self.accessStatus = status
         switch status {
