@@ -16,4 +16,6 @@ DerivedData/
 *.mobileprovision
 *eval*.json
 
+# Prototype compiled icon artifacts
+prototypes/**/*.icns
 
