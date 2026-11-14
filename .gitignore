@@ -1,4 +1,8 @@
-node_modules
-dist
 .DS_Store
-*.tsbuildinfo
+.build/
+.swiftpm/
+dist/
+DerivedData/
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+
