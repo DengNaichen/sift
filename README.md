@@ -20,6 +20,8 @@ swift run MailroomApp
 open dist/Mailroom.app
 ```
 
+打包需要支持 Icon Composer 的完整 Xcode（26 或更新版本）。脚本会将 [Sift 图标源资产](Resources/Brand/README.md) 编译为原生图标资源并写入应用包；更新图标预览使用 `./scripts/export-app-icon.sh`。
+
 首次运行独立 `.app` 时：
 1. 若尚未授予磁盘权限，应用会自动以内置演示数据启动，并在顶部显示引导条，点击 **「打开系统设置」** 在「隐私与安全性 → 完全磁盘访问权限」中勾选 `Mailroom.app`，随后点 **「重新连接」** 即可切换至真实邮箱。
 2. 首次按下 `Space`（归档）、`⇧K`（插旗保留）或 `⌫`（移入废纸篓）时，系统会弹出一次「允许 Mailroom 控制“邮件”」授权框，点允许即可。

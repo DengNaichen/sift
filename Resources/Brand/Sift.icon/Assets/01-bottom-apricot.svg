@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="apricot" gradientUnits="userSpaceOnUse" x1="307.000000" y1="740.052831" x2="677.176653" y2="654.590816">
+      <stop offset="0.000000" stop-color="#F4A662"/>
+      <stop offset="0.680000" stop-color="#F8DABD"/>
+      <stop offset="1.000000" stop-color="#F8DABD"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#apricot)" d="M 290.803524 669.898186 L 660.980177 584.436172 A 72 72 0 0 1 693.373129 724.745461 L 323.196476 810.207475 A 72 72 0 0 1 290.803524 669.898186 Z"/>
+</svg>
