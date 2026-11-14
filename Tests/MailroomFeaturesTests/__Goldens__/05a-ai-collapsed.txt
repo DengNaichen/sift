@@ -1,0 +1,175 @@
+[state]
+phase=ready folder=inbox scope=all focus=CAH7x9k2Lq@mail.gmail.com
+visible=CAH7x9k2Lq@mail.gmail.com,20261112.policy.8812@notify.driftbox.io,contract-v3-0b71@hengzhi-law.com,stmt-202611-3391@cmbchina.com,invite-aips-2026-77a1@events.huodongxing.com
+activeIndex=0 activeAccount=nil
+counts=inbox:5,inbox:human:1,inbox:stakes:3,inbox:uncertain:1,kept:0,archived:4,trashed:6
+accounts=work,personal
+read=CAH7x9k2Lq@mail.gmail.com
+queue=CAH7x9k2Lq@mail.gmail.com,20261112.policy.8812@notify.driftbox.io,contract-v3-0b71@hengzhi-law.com,stmt-202611-3391@cmbchina.com,invite-aips-2026-77a1@events.huodongxing.com
+kept=
+handled=otp-839201@github.com/archived/false,sf-SF1428833901276@sf-express.com/archived/false,invoice-2026-11-cf@billing.cloudflare.com/archived/false,renewal-notice-7781@linear.app/archived/false,jd-1111-return@newsletter.jd.com/trashed/false,li-digest-2026-11-12@linkedin.com/trashed/false,ctrip-fare-8812@ctrip.com/trashed/false,medium-daily-1112@medium.com/trashed/false,sbux-reward-55@starbucks.com.cn/trashed/false,uniqlo-hk-2026w@uniqlo.cn/trashed/false
+undo=
+toast=nil seq=0
+tally=a0 k0 t0 r0
+[ui]
+sidebarCollapsed=false paletteOpen=false settingsOpen=false section=accounts
+themePref=system themeMode=light colorScheme=nil
+plain=false hud=true ai=false rail=false
+allowedRemote=
+source=demo access=fullDiskAccessRequired(expectedPath: "/Users/test/Library/Mail/V10/MailData/Envelope Index") demo=true error=nil notice=nil
+settingsAccounts=work:工作:cobalt:[Gmail]/All Mail,personal:个人:sage:Archive
+[hud]
+J+K|切换|disabled=false
+Space|归档|disabled=false
+⇧K|保留|disabled=false
+⌫|推广|disabled=false
+I|判据|disabled=false
+↵|Mail|disabled=false
+Z|撤销|disabled=true
+⌘K|命令|disabled=false
+[palette]
+archive|当前邮件|阅毕归档|周四下午能一起过下 Q1 定价页改版吗？|Space|archivebox|archive 归档
+keep|当前邮件|重要保留|周四下午能一起过下 Q1 定价页改版吗？|⇧K|flag|flag keep 保留 标旗
+trash|当前邮件|判为推广并移入废纸篓|周四下午能一起过下 Q1 定价页改版吗？|⌫|trash|trash delete 推广 废纸篓
+native|当前邮件|在 Apple Mail 中打开|-|↵|arrow.up.right|open mail 打开
+toggle-ai-strip|当前邮件|展开正文顶部 AI 判据条|-|I|sparkles|ai reason evidence 判据 引证 确信度
+toggle-inspector-rail|当前邮件|打开右侧洞察侧栏|查看校准确信度进度条、安全护栏与同线程历史往来|⇧I|sidebar.right|inspector rail sidebar 洞察栏 侧栏 线程
+acc-all|邮箱范围|查看全部邮箱|-|-|tray|account all 全部邮箱
+acc-work|邮箱范围|只看「工作」邮箱|lin@studio-north.cn|-|envelope|account 工作 lin@studio-north.cn
+acc-personal|邮箱范围|只看「个人」邮箱|lin.personal@icloud.com|-|envelope|account 个人 lin.personal@icloud.com
+folder-inbox|分拣夹|前往：全部待处理|5 封|1|tray|全部待处理
+folder-inbox:human|分拣夹|前往：真人来信|1 封|-|tray|真人来信
+folder-inbox:stakes|分拣夹|前往：合同 · 账单 · 条款|3 封|-|tray|合同 · 账单 · 条款
+folder-inbox:uncertain|分拣夹|前往：待你拍板|1 封|-|tray|待你拍板
+folder-kept|分拣夹|前往：重要保留|0 封|-|flag|重要保留
+folder-archived|分拣夹|前往：已自动归档|4 封|2|archivebox|已自动归档
+folder-trashed|分拣夹|前往：废纸篓|6 封|3|trash|废纸篓
+mail-CAH7x9k2Lq@mail.gmail.com|待你处理|周四下午能一起过下 Q1 定价页改版吗？|林晓 · 工作|-|envelope|linxiao@studio-north.cn lin@studio-north.cn 真人来信 需回复 嗨，
+
+上周你提的「把年付折扣做成默认选项」我跟 Mia 聊过了，她觉得可以先在定价页上做个 A/B。
+
+想约你半小时一起过一下新的线框稿，顺便定一下文案口径：
+- 周四 15:00–15:30
+- 或者周五 10:00 之后都行
+
+你回我哪个时段方便就好，我来发会议邀请。线框稿我先放在 Figma 的「Pricing v3」页里了。
+
+林晓
+mail-20261112.policy.8812@notify.driftbox.io|待你处理|Driftbox 秋季产品周报：协作白板、离线模式与更多|Driftbox 团队 · 个人|-|envelope|hello@notify.driftbox.io lin.personal@icloud.com 条款/额度变更 需决定 Driftbox 秋季产品周报
+
+1. 协作白板正式上线
+现在可以在任意文件夹中创建白板，并邀请最多 10 位协作者实时编辑。
+
+2. 离线模式改进
+桌面端现在会智能缓存你最近打开的 200 个文件。
+
+3. 全新的移动端分享面板
+一键生成带有效期的分享链接。
+
+4. 免费版方案调整
+为了持续提供稳定的服务，自 2026 年 12 月 15 日起，免费版的存储空间将从 10 GB 调整为 2 GB。超出部分的文件将保留为只读状态 60 天，之后可能被移除。升级至 Plus（¥18/月）可保留全部空间。
+
+感谢你一直以来的支持。
+Driftbox 团队
+
+退订此类邮件
+mail-contract-v3-0b71@hengzhi-law.com|待你处理|【待确认】2027 年度设计服务合同（第三版）|周律师 · 恒致律所 · 工作|-|envelope|zhou.yi@hengzhi-law.com lin@studio-north.cn 合同 · 含附件 需确认 您好，
+
+附件是甲方法务回传的第三版合同及修订对照表，主要变动如下：
+
+1. 第 7.2 条付款节点：首付款比例由 40% 调整为 30%，尾款由验收后 15 个工作日内支付调整为 30 个工作日内支付。
+2. 第 11 条知识产权：新增「乙方可将项目成果用于作品集展示，但需在项目上线 6 个月后」。
+3. 其余条款无实质变动。
+
+我们的意见：第 7.2 条对您现金流有一定影响，建议争取首付 35%。如无异议，请于本周五（11 月 14 日）前回复确认，我们将安排电子签署。
+
+周毅
+恒致律师事务所
+mail-stmt-202611-3391@cmbchina.com|待你处理|您的 11 月信用卡电子账单|招商银行信用卡 · 个人|-|envelope|ccsvc@message.cmbchina.com lin.personal@icloud.com 账单异动 需核对 尊敬的客户：
+
+您 11 月账单已出。
+本期应还金额：¥8,432.17
+最低还款额：¥843.22
+到期还款日：2026 年 11 月 25 日
+
+本期主要交易：
+11/03  AMAZON WEB SERVICES  USD 289.40  折合 ¥2,084.61
+11/06  美团外卖  ¥68.50
+11/09  中国国航  ¥2,940.00
+……
+
+温馨提示：境外交易可能产生货币转换费。
+mail-invite-aips-2026-77a1@events.huodongxing.com|待你处理|邀请函｜2026 AI 产品峰会 · 闭门圆桌（深圳）|王瑶 via 活动行 · 工作|-|envelope|noreply@events.huodongxing.com lin@studio-north.cn 待你拍板  Hi，
+
+我是王瑶，今年负责 AI 产品峰会闭门圆桌的嘉宾邀请。上次在杭州的 Design Day 跟你聊过「AI 时代的收件箱」，印象很深。
+
+圆桌主题：「把注意力还给用户：AI 原生工具的克制设计」
+时间：12 月 3 日（周三）14:00–17:00
+地点：深圳南山 · 科兴科学园
+规模：约 20 人，不对外售票
+
+这是你的专属嘉宾码：AIPS-VIP-3K7Q（含当晚晚宴）
+
+如果方便，请在 11 月 20 日前通过下方链接确认。
+
+王瑶
+——
+本邮件由活动行代发 · 退订
+handled-otp-839201@github.com|自动处理|[GitHub] Please verify your device|GitHub · 验证码 · 工作|-|envelope.badge|noreply@github.com lin@studio-north.cn Hey there!
+
+A sign in attempt requires further verification because we did not recognize your device.
+
+Verification code: 839201
+
+Thanks,
+The GitHub Team
+handled-sf-SF1428833901276@sf-express.com|自动处理|您的快件正在派送中|顺丰速运 · 物流通知 · 个人|-|envelope.badge|noreply@sf-express.com lin.personal@icloud.com 您好，您的快件 SF1428833901276 正在派送中，派送员：张师傅，电话 138****2210。
+
+如需改约派送时间，请在顺丰速运小程序中操作。
+handled-invoice-2026-11-cf@billing.cloudflare.com|自动处理|Your Cloudflare invoice for November 2026|Cloudflare · 账单通知 · 工作|-|envelope.badge|billing@cloudflare.com lin@studio-north.cn Hi,
+
+Your invoice for November 2026 is now available.
+
+Workers Paid — $20.00
+Total charged to Visa •••• 4417: $20.00
+handled-renewal-notice-7781@linear.app|自动处理|Your Linear plan renews on Nov 19|Linear · 账单通知 · 工作|-|envelope.badge|billing@linear.app lin@studio-north.cn Hi,
+
+This is a reminder that your Linear Standard plan (12 seats) will renew on November 19, 2026 for $96.00.
+
+No action is needed if you would like to continue.
+handled-jd-1111-return@newsletter.jd.com|自动处理|双 11 返场最后 48 小时｜Apple 产品至高立减 1500|京东 · 营销推广 · 个人|-|envelope.badge|newsletter@jd.com lin.personal@icloud.com 你关注的 AirPods Pro 再降 ¥200，叠加 PLUS 会员券再减 ¥100。
+
+活动截至 11 月 14 日 23:59。
+
+退订
+handled-li-digest-2026-11-12@linkedin.com|自动处理|本周有 12 人查看了你的个人资料|LinkedIn · 社交通知 · 工作|-|envelope.badge|messages-noreply@linkedin.com lin@studio-north.cn 看看都有谁在关注你——升级 Premium 解锁完整名单。
+
+退订
+handled-ctrip-fare-8812@ctrip.com|自动处理|上海 → 东京 ¥1,280 起，元旦机票早鸟开抢|携程旅行 · 营销推广 · 个人|-|envelope.badge|promo@ctrip.com lin.personal@icloud.com 你搜索过的航线有新低价，限时 3 天。
+
+退订
+handled-medium-daily-1112@medium.com|自动处理|The Quiet Death of the Inbox — and 5 more stories|Medium Daily Digest · 资讯订阅 · 工作|-|envelope.badge|noreply@medium.com lin@studio-north.cn Stories from Design, Productivity and AI, picked for you.
+
+Unsubscribe
+handled-sbux-reward-55@starbucks.com.cn|自动处理|你的「星」礼包已到账，本周饮品买一赠一|星巴克 · 营销推广 · 个人|-|envelope.badge|rewards@starbucks.com.cn lin.personal@icloud.com 会员专享：周五前任意大杯饮品买一赠一。
+
+退订
+handled-uniqlo-hk-2026w@uniqlo.cn|自动处理|新品上市 | HEATTECH 极暖系列，入冬必备|优衣库 · 营销推广 · 个人|-|envelope.badge|news@uniqlo.cn lin.personal@icloud.com 本周限定价 ¥79 起，会员额外 95 折。
+
+退订
+switch-live|数据源|接入本机 Apple Mail 真机收件箱|只读同步 Envelope Index + AppleEvent 写回|-|tray.full|apple mail live 真机 接入
+sim|演示|模拟收到 3 封新邮件|-|-|tray.and.arrow.down|demo 模拟收到
+reset|演示|重置演示数据|-|-|arrow.counterclockwise|demo reset 重置
+settings-accounts|设置|设置：邮箱与连接|-|⌘,|envelope|settings 设置 account mail permission fda alias 邮箱 账户 权限 磁盘 别名 连接
+settings-triage|设置|设置：分拣与护栏|-|-|shield|settings 设置 triage rule guardrail whitelist promo newsletter 分拣 护栏 推广 归档 废纸篓 白名单
+settings-ai|设置|设置：AI 分类引擎|-|-|sparkles|settings 设置 ai llm model gemini claude openai ollama api key threshold 模型 引擎 密钥 阈值 确信度
+settings-appearance|设置|设置：阅读与外观|-|-|sun.max|settings 设置 theme dark light plain html image hud 外观 主题 深色 浅色 纯文本 富文本 图片
+settings-diagnostics|设置|设置：快捷键与诊断|-|-|command|settings 设置 shortcut keybind doctor cache eval 快捷键 诊断 缓存 自检 评测
+sidebar|系统|收起左侧边栏|-|[|sidebar.left|sidebar 侧边栏
+theme|系统|切换到深色模式|-|-|moon|theme dark light 主题 深色 浅色
+[defaults]
+mailroom-theme-pref=nil
+mailroom-theme=nil
+mailroom-show-hud=nil
+mailroom-ai-expanded=0
+mailroom-inspector-rail=nil

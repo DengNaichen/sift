@@ -8,6 +8,7 @@ let package = Package(
     ],
     products: [
         .library(name: "MailroomCore", targets: ["MailroomCore"]),
+        .library(name: "MailroomFeatures", targets: ["MailroomFeatures"]),
         .executable(name: "MailroomApp", targets: ["MailroomApp"]),
         .executable(name: "mailroom-bridge", targets: ["MailroomBridgeCLI"])
     ],
@@ -19,9 +20,15 @@ let package = Package(
                 .linkedLibrary("iconv")
             ]
         ),
+        // ViewModel / Store / View 层：可被测试与 Preview 直接引用
+        .target(
+            name: "MailroomFeatures",
+            dependencies: ["MailroomCore"]
+        ),
+        // 仅保留 @main 组装入口
         .executableTarget(
             name: "MailroomApp",
-            dependencies: ["MailroomCore"]
+            dependencies: ["MailroomFeatures"]
         ),
         .executableTarget(
             name: "MailroomBridgeCLI",
@@ -30,6 +37,11 @@ let package = Package(
         .testTarget(
             name: "MailroomCoreTests",
             dependencies: ["MailroomCore"]
+        ),
+        .testTarget(
+            name: "MailroomFeaturesTests",
+            dependencies: ["MailroomFeatures", "MailroomCore"],
+            exclude: ["__Goldens__", "__Snapshots__"]
         )
     ]
 )

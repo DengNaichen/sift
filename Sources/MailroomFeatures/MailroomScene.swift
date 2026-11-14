@@ -2,15 +2,14 @@ import AppKit
 import SwiftUI
 import MailroomCore
 
-@main
-struct MailroomAppMain: App {
-    @State private var vm = DeckViewModel()
+public struct MailroomScene: Scene {
+    let vm: DeckViewModel
 
-    init() {
-        NSApplication.shared.setActivationPolicy(.regular)
+    public init(vm: DeckViewModel) {
+        self.vm = vm
     }
 
-    var body: some Scene {
+    public var body: some Scene {
         WindowGroup("Mailroom Deck") {
             RootThemeHostView(vm: vm)
                 .preferredColorScheme(vm.preferredColorScheme)
@@ -47,7 +46,7 @@ struct MailroomAppMain: App {
     }
 }
 
-private struct RootThemeHostView: View {
+struct RootThemeHostView: View {
     @Environment(\.colorScheme) private var systemColorScheme
     let vm: DeckViewModel
 

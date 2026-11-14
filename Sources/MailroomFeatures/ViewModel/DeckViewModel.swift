@@ -36,12 +36,12 @@ public final class DeckViewModel {
     public private(set) var sourceMode: DataSourceMode
     public var themePreference: ThemePreference {
         didSet {
-            UserDefaults.standard.set(themePreference.rawValue, forKey: "mailroom-theme-pref")
+            defaults.set(themePreference.rawValue, forKey: "mailroom-theme-pref")
         }
     }
     public var themeMode: ThemeMode {
         didSet {
-            UserDefaults.standard.set(themeMode.rawValue, forKey: "mailroom-theme")
+            defaults.set(themeMode.rawValue, forKey: "mailroom-theme")
         }
     }
     public var sidebarCollapsed: Bool = false
@@ -51,17 +51,17 @@ public final class DeckViewModel {
     public var preferPlainText: Bool = false
     public var showKeyboardHUD: Bool {
         didSet {
-            UserDefaults.standard.set(showKeyboardHUD, forKey: "mailroom-show-hud")
+            defaults.set(showKeyboardHUD, forKey: "mailroom-show-hud")
         }
     }
     public var aiReasoningExpanded: Bool {
         didSet {
-            UserDefaults.standard.set(aiReasoningExpanded, forKey: "mailroom-ai-expanded")
+            defaults.set(aiReasoningExpanded, forKey: "mailroom-ai-expanded")
         }
     }
     public var inspectorRailOpen: Bool {
         didSet {
-            UserDefaults.standard.set(inspectorRailOpen, forKey: "mailroom-inspector-rail")
+            defaults.set(inspectorRailOpen, forKey: "mailroom-inspector-rail")
         }
     }
     public private(set) var allowedRemoteImageIds: Set<MessageId> = []
@@ -70,6 +70,8 @@ public final class DeckViewModel {
     public private(set) var errorMessage: String? = nil
     public private(set) var isSyncing: Bool = false
 
+    private let environment: AppEnvironment
+    private var defaults: UserDefaults { environment.defaults }
     private var adapter: any MailAdapter
     private var watchTask: Task<Void, Never>?
     private var noticeTask: Task<Void, Never>?
@@ -77,9 +79,15 @@ public final class DeckViewModel {
     private var rescuingIds: Set<MessageId> = []
     private var attemptedHydrationIds: Set<MessageId> = []
 
-    public init() {
-        let systemDark = NSApp?.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        if let savedPref = UserDefaults.standard.string(forKey: "mailroom-theme-pref"),
+    public convenience init() {
+        self.init(environment: .live)
+    }
+
+    public init(environment: AppEnvironment) {
+        self.environment = environment
+        let defaults = environment.defaults
+        let systemDark = environment.systemIsDark()
+        if let savedPref = defaults.string(forKey: "mailroom-theme-pref"),
            let pref = ThemePreference(rawValue: savedPref) {
             self.themePreference = pref
             switch pref {
@@ -87,7 +95,7 @@ public final class DeckViewModel {
             case .dark: self.themeMode = .dark
             case .system: self.themeMode = systemDark ? .dark : .light
             }
-        } else if let saved = UserDefaults.standard.string(forKey: "mailroom-theme"),
+        } else if let saved = defaults.string(forKey: "mailroom-theme"),
                   let mode = ThemeMode(rawValue: saved) {
             self.themePreference = (mode == .dark) ? .dark : .light
             self.themeMode = mode
@@ -96,26 +104,26 @@ public final class DeckViewModel {
             self.themeMode = systemDark ? .dark : .light
         }
 
-        if UserDefaults.standard.object(forKey: "mailroom-show-hud") != nil {
-            self.showKeyboardHUD = UserDefaults.standard.bool(forKey: "mailroom-show-hud")
+        if defaults.object(forKey: "mailroom-show-hud") != nil {
+            self.showKeyboardHUD = defaults.bool(forKey: "mailroom-show-hud")
         } else {
             self.showKeyboardHUD = true
         }
 
-        if UserDefaults.standard.object(forKey: "mailroom-ai-expanded") != nil {
-            self.aiReasoningExpanded = UserDefaults.standard.bool(forKey: "mailroom-ai-expanded")
+        if defaults.object(forKey: "mailroom-ai-expanded") != nil {
+            self.aiReasoningExpanded = defaults.bool(forKey: "mailroom-ai-expanded")
         } else {
             self.aiReasoningExpanded = true
         }
-        self.inspectorRailOpen = UserDefaults.standard.bool(forKey: "mailroom-inspector-rail")
+        self.inspectorRailOpen = defaults.bool(forKey: "mailroom-inspector-rail")
 
-        let status = MailStoreEnvironment.checkAccess()
+        let status = environment.checkAccess()
         self.accessStatus = status
-        if case .ready = status, let live = try? AppleMailAdapter(maxInboxFetch: 100) {
+        if case .ready = status, let live = environment.makeLiveAdapter() {
             self.adapter = live
             self.sourceMode = .appleMail
         } else {
-            self.adapter = MockMailAdapter()
+            self.adapter = environment.makeDemoAdapter()
             self.sourceMode = .demo
         }
 
@@ -189,11 +197,11 @@ public final class DeckViewModel {
     }
 
     public func recheckAccessAndSwitchToAppleMail() {
-        let status = MailStoreEnvironment.checkAccess()
+        let status = environment.checkAccess()
         self.accessStatus = status
         switch status {
         case .ready:
-            if let live = try? AppleMailAdapter(maxInboxFetch: 100) {
+            if let live = environment.makeLiveAdapter() {
                 self.adapter = live
                 self.sourceMode = .appleMail
                 self.errorMessage = nil
@@ -209,7 +217,7 @@ public final class DeckViewModel {
     }
 
     public func switchToDemoMode() {
-        self.adapter = MockMailAdapter()
+        self.adapter = environment.makeDemoAdapter()
         self.sourceMode = .demo
         self.errorMessage = nil
         self.attemptedHydrationIds.removeAll()
@@ -299,7 +307,7 @@ public final class DeckViewModel {
         case .dark:
             themeMode = .dark
         case .system:
-            let isDark = NSApp?.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            let isDark = environment.systemIsDark()
             themeMode = isDark ? .dark : .light
         }
     }
