@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mailroom Deck — Settings 交互原型</title>
+<style>
+  :root {
+    --canvas: #FAFBFD;
+    --paper: #FFFFFF;
+    --raised: #FFFFFF;
+    --sunken: #F6F7F9;
+    --hover-fill: rgba(15, 23, 42, 0.032);
+    --active-nav: rgba(15, 17, 23, 0.062);
+    --ink: #0F1117;
+    --ink2: #484E5C;
+    --ink3: #8A919E;
+    --line: rgba(15, 20, 32, 0.055);
+    --line-strong: rgba(15, 20, 32, 0.11);
+    --selected-border: rgba(15, 17, 23, 0.48);
+    --amber: #B86E14;
+    --cobalt: #3B63E6;
+    --sage: #25855A;
+    --coral: #D1434E;
+    --paper-shadow: 0 1px 3px rgba(0, 0, 0, 0.035);
+    --window-shadow: 0 26px 70px rgba(15, 20, 32, 0.16), 0 0 0 1px rgba(15, 20, 32, 0.08);
+    --backdrop-bg: #ECEFF4;
+    --kbd-bg: rgba(15, 17, 23, 0.055);
+    --toggle-off: rgba(15, 20, 32, 0.14);
+    --toggle-on: #1B1E26;
+    --toggle-knob: #FFFFFF;
+  }
+
+  [data-theme="dark"] {
+    --canvas: #101114;
+    --paper: #16171B;
+    --raised: #1C1E24;
+    --sunken: #1B1C22;
+    --hover-fill: rgba(255, 255, 255, 0.032);
+    --active-nav: rgba(255, 255, 255, 0.072);
+    --ink: #ECEDEF;
+    --ink2: #A5A9B3;
+    --ink3: #686C77;
+    --line: rgba(255, 255, 255, 0.055);
+    --line-strong: rgba(255, 255, 255, 0.115);
+    --selected-border: rgba(255, 255, 255, 0.42);
+    --amber: #F1A638;
+    --cobalt: #6B9AFF;
+    --sage: #4CC38A;
+    --coral: #F26B75;
+    --paper-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    --window-shadow: 0 28px 80px rgba(0, 0, 0, 0.62), 0 0 0 1px rgba(255, 255, 255, 0.09);
+    --backdrop-bg: #090A0D;
+    --kbd-bg: rgba(255, 255, 255, 0.07);
+    --toggle-off: rgba(255, 255, 255, 0.15);
+    --toggle-on: #E2E4E9;
+    --toggle-knob: #141519;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+    background: var(--backdrop-bg);
+    color: var(--ink);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px 16px;
+    user-select: none;
+  }
+
+  .mono {
+    font-family: "SF Mono", ui-monospace, Menlo, Monaco, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 顶部原型实验对比条（走查辅助，非产品内 UI） */
+  .proto-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+    font-size: 11.5px;
+    color: var(--ink3);
+  }
+  .proto-seg {
+    display: inline-flex;
+    background: var(--sunken);
+    padding: 2px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    gap: 2px;
+  }
+  .proto-seg button {
+    border: none;
+    background: transparent;
+    color: var(--ink3);
+    font-size: 11.5px;
+    padding: 3px 9px;
+    border-radius: 4.5px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .proto-seg button.active {
+    background: var(--paper);
+    color: var(--ink);
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+  }
+  [data-theme="dark"] .proto-seg button.active {
+    background: rgba(255,255,255,0.11);
+  }
+  .proto-divider {
+    width: 1px;
+    height: 12px;
+    background: var(--line-strong);
+  }
+
+  /* macOS 仿真主窗口 (1220 × 780) */
+  .mac-window {
+    width: 1220px;
+    height: 780px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 60px);
+    background: var(--canvas);
+    border-radius: 14px;
+    box-shadow: var(--window-shadow);
+    display: flex;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 左侧边栏 206pt */
+  .sidebar {
+    width: 206px;
+    flex-shrink: 0;
+    height: 100%;
+    padding: 10px 10px 8px;
+    display: flex;
+    flex-direction: column;
+    background: var(--canvas);
+  }
+
+  .traffic-lights {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px 10px;
+  }
+  .tl {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 0.5px solid rgba(0,0,0,0.12);
+  }
+  .tl.close { background: #FF5F57; }
+  .tl.min { background: #FEBC2E; }
+  .tl.max { background: #28C840; }
+
+  .brand-row {
+    height: 32px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .silk-logo {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: radial-gradient(circle at 82% 84%, #F6B06F 0%, rgba(246,176,111,0) 58%),
+                radial-gradient(circle at 85% 18%, #ECC7E2 0%, rgba(236,199,226,0) 52%),
+                linear-gradient(135deg, #9E6FF6 0%, #B588FC 52%, #DCC3FD 100%);
+    flex-shrink: 0;
+  }
+  .brand-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+    flex: 1;
+  }
+
+  .icon-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--ink3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .icon-btn:hover {
+    background: var(--hover-fill);
+    color: var(--ink);
+  }
+  .icon-btn.active {
+    background: var(--active-nav);
+    color: var(--ink);
+  }
+
+  .back-deck-btn {
+    width: 100%;
+    height: 30px;
+    padding: 0 8px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink2);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .back-deck-btn:hover {
+    background: var(--hover-fill);
+    color: var(--ink);
+  }
+
+  .cmd-trigger {
+    margin-top: 8px;
+    width: 100%;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 7px;
+    border: none;
+    background: var(--kbd-bg);
+    color: var(--ink3);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .cmd-trigger:hover {
+    color: var(--ink2);
+    background: var(--active-nav);
+  }
+
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4.5px;
+    border-radius: 4.5px;
+    background: var(--kbd-bg);
+    color: var(--ink3);
+    font-size: 10.5px;
+    font-weight: 500;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    line-height: 1;
+  }
+  .kbd.letter {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  }
+
+  .nav-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .nav-group-label {
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    color: var(--ink3);
+    padding: 0 8px 3px;
+  }
+  .nav-row {
+    width: 100%;
+    height: 28px;
+    padding: 0 8px;
+    border: none;
+    border-radius: 7.5px;
+    background: transparent;
+    color: var(--ink2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+  }
+  .nav-row.sub { padding-left: 18px; }
+  .nav-row:hover {
+    background: var(--hover-fill);
+    color: var(--ink);
+  }
+  .nav-row.active {
+    background: var(--active-nav);
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .nav-row svg {
+    width: 13.5px;
+    height: 13.5px;
+    color: var(--ink3);
+    flex-shrink: 0;
+  }
+  .nav-row.active svg { color: var(--ink); }
+  .nav-count {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--ink3);
+  }
+
+  .account-tabs {
+    margin-top: 8px;
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 7px;
+    background: var(--kbd-bg);
+    overflow-x: auto;
+  }
+  .acc-tab {
+    border: none;
+    background: transparent;
+    color: var(--ink3);
+    font-size: 11.5px;
+    font-family: inherit;
+    padding: 4px 7px;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .acc-tab.active {
+    background: var(--paper);
+    color: var(--ink);
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .dot {
+    width: 5.5px;
+    height: 5.5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .sidebar-footer {
+    height: 28px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 5.5px;
+  }
+  .footer-status {
+    font-size: 11px;
+    color: var(--ink3);
+  }
+
+  /* 右侧白纸工作台 */
+  .paper-sheet {
+    flex: 1;
+    margin: 6px 6px 6px 0;
+    background: var(--paper);
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    box-shadow: var(--paper-shadow);
+    overflow: hidden;
+    display: flex;
+    position: relative;
+  }
+
+  /* ================= Settings 极简内容区 ================= */
+  .settings-pane {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .settings-topbar {
+    height: 44px;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    color: var(--ink3);
+  }
+  .breadcrumb strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .settings-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 36px 48px;
+  }
+  .settings-scroll::-webkit-scrollbar { width: 6px; }
+  .settings-scroll::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border-radius: 999px;
+  }
+
+  .settings-container {
+    max-width: 620px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+
+  .page-title {
+    font-size: 17.5px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.2px;
+  }
+
+  .sec-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sec-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2px;
+  }
+  .sec-title {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ink3);
+  }
+  .sec-footnote {
+    font-size: 11.5px;
+    color: var(--ink3);
+    padding: 2px 2px 0;
+    line-height: 1.5;
+  }
+
+  /* 容器 A: Sunken */
+  .card-group {
+    background: var(--sunken);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  /* 容器 B: Hairline Editorial */
+  [data-density="hairline"] .card-group {
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--line-strong);
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+  }
+
+  .setting-row {
+    min-height: 44px;
+    padding: 9px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  [data-density="hairline"] .setting-row {
+    padding: 10px 2px;
+  }
+  .setting-row + .setting-row {
+    border-top: 1px solid var(--line);
+  }
+
+  .row-title {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .row-sub {
+    font-size: 11.5px;
+    color: var(--ink3);
+    margin-top: 2px;
+  }
+
+  /* 极简状态文字（只保留 5.5px 小点，去掉彩色底块） */
+  .status-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 5.5px;
+    font-size: 12px;
+    color: var(--ink3);
+  }
+
+  .quiet-tag {
+    font-size: 10.5px;
+    color: var(--ink3);
+    background: var(--kbd-bg);
+    padding: 1.5px 6px;
+    border-radius: 4px;
+  }
+
+  /* 单色克制按钮 */
+  .btn {
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 6px;
+    border: 1px solid var(--line-strong);
+    background: var(--paper);
+    color: var(--ink2);
+    font-size: 12px;
+    font-weight: 400;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:hover {
+    color: var(--ink);
+    border-color: var(--ink3);
+  }
+  .btn.solid {
+    background: var(--ink);
+    color: var(--canvas);
+    border-color: var(--ink);
+    font-weight: 500;
+  }
+  .btn.confirm-danger {
+    color: var(--coral);
+    border-color: var(--line-strong);
+  }
+
+  /* 纯黑白灰 Switch */
+  .switch {
+    width: 32px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--toggle-off);
+    border: none;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--toggle-knob);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.18);
+    transition: transform 0.15s cubic-bezier(0.2, 0.85, 0.3, 1);
+  }
+  [data-theme="dark"] .switch:not(.on)::after {
+    background: #ECEDEF;
+  }
+  .switch.on {
+    background: var(--toggle-on);
+  }
+  .switch.on::after {
+    transform: translateX(14px);
+  }
+
+  /* 纯中性灰阶分段控件（零红绿字干扰） */
+  .seg-control {
+    display: inline-flex;
+    padding: 2px;
+    border-radius: 6.5px;
+    background: var(--kbd-bg);
+    gap: 1px;
+    flex-shrink: 0;
+  }
+  .seg-control button {
+    border: none;
+    background: transparent;
+    color: var(--ink3);
+    font-size: 11.5px;
+    font-family: inherit;
+    padding: 3.5px 9px;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .seg-control button:hover {
+    color: var(--ink2);
+  }
+  .seg-control button.active {
+    background: var(--paper);
+    color: var(--ink);
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+  }
+  [data-theme="dark"] .seg-control button.active {
+    background: rgba(255, 255, 255, 0.11);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.28);
+  }
+
+  /* 账户列表行：每行仅保留 1 颗小圆点（点击循环切换强调色，告别彩虹调色盘） */
+  .acc-row {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  [data-density="hairline"] .acc-row {
+    padding: 11px 2px;
+  }
+  .acc-row + .acc-row {
+    border-top: 1px solid var(--line);
+  }
+  .single-dot-btn {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .single-dot-btn:hover {
+    background: var(--hover-fill);
+    border-color: var(--line-strong);
+  }
+  .single-dot-btn .dot-lg {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+  .inline-label-input {
+    width: 68px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    outline: none;
+  }
+  .inline-label-input:hover {
+    border-color: var(--line-strong);
+    background: var(--paper);
+  }
+  .inline-label-input:focus {
+    border-color: var(--ink3);
+    background: var(--paper);
+  }
+  .acc-paths {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--ink3);
+    white-space: nowrap;
+  }
+
+  /* 胶囊标签输入 */
+  .tag-inline-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 12px;
+  }
+  [data-density="hairline"] .tag-inline-wrap {
+    padding: 10px 2px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 22px;
+    padding: 0 7.5px;
+    border-radius: 4.5px;
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
+    font-size: 11.5px;
+    color: var(--ink2);
+  }
+  .chip.locked {
+    background: transparent;
+    border-color: var(--line);
+    color: var(--ink3);
+  }
+  .chip button {
+    border: none;
+    background: transparent;
+    color: var(--ink3);
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+  }
+  .chip button:hover { color: var(--ink); }
+  .tag-input {
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+    min-width: 150px;
+    flex: 1;
+    height: 22px;
+  }
+
+  /* AI 引擎三选一卡片（无紫色光晕、无彩色标签） */
+  .engine-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .engine-card {
+    padding: 12px 13px;
+    border-radius: 9px;
+    background: var(--sunken);
+    border: 1px solid var(--line);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+  }
+  .engine-card:hover {
+    border-color: var(--line-strong);
+  }
+  .engine-card.selected {
+    background: var(--paper);
+    border-color: var(--selected-border);
+  }
+  .engine-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .engine-desc {
+    font-size: 11.5px;
+    color: var(--ink3);
+    line-height: 1.4;
+  }
+
+  .text-input {
+    height: 27px;
+    padding: 0 9px;
+    border-radius: 5.5px;
+    border: 1px solid var(--line-strong);
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+    width: 296px;
+  }
+  .text-input.mono { font-size: 11.5px; }
+  .text-input:focus { border-color: var(--selected-border); }
+
+  .slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 150px;
+    height: 3.5px;
+    border-radius: 999px;
+    background: var(--line-strong);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--ink);
+    cursor: pointer;
+    border: 2px solid var(--paper);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  }
+
+  /* 外观三态微缩卡（去掉花哨渐变条，纯灰阶结构示意） */
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .theme-card {
+    border-radius: 9px;
+    border: 1px solid var(--line);
+    background: var(--sunken);
+    padding: 9px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .theme-card:hover { border-color: var(--line-strong); }
+  .theme-card.selected {
+    background: var(--paper);
+    border-color: var(--selected-border);
+  }
+  .theme-preview {
+    height: 58px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(128,128,128,0.14);
+    display: flex;
+  }
+  .tp-side {
+    width: 28%;
+    padding: 7px 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tp-bar { height: 3.5px; border-radius: 2px; opacity: 0.2; }
+  .tp-paper {
+    flex: 1;
+    margin: 4px 4px 4px 0;
+    border-radius: 4px;
+    padding: 7px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .tp-row-active { height: 10px; border-radius: 3px; }
+  .theme-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+    padding: 0 2px;
+  }
+
+  /* 诊断四宫格 */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: var(--sunken);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .stat-cell {
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .stat-cell + .stat-cell { border-left: 1px solid var(--line); }
+  .stat-val {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .stat-lbl { font-size: 11px; color: var(--ink3); }
+
+  .shortcut-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .shortcut-item {
+    padding: 8.5px 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--ink2);
+  }
+  .shortcut-item + .shortcut-item { border-top: 1px solid var(--line); }
+
+  /* ================= Inbox 仿真分拣台 ================= */
+  .deck-pane { flex: 1; display: flex; height: 100%; }
+  .mail-list {
+    width: 348px;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+  }
+  .pane-header {
+    height: 44px;
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .mail-row {
+    margin: 5px 8px;
+    padding: 11px 12px;
+    border-radius: 11px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .mail-row:hover { background: var(--hover-fill); }
+  .mail-row.selected {
+    background: radial-gradient(circle at 84% 86%, rgba(252, 214, 180, 0.85) 0%, rgba(253, 230, 209, 0) 54%),
+                radial-gradient(circle at 88% 14%, rgba(249, 236, 246, 0.65) 0%, rgba(249, 236, 246, 0) 56%),
+                linear-gradient(135deg, #F8F5FF 0%, #EFE8FE 60%, #E7DDFD 100%);
+  }
+  [data-theme="dark"] .mail-row.selected {
+    background: radial-gradient(circle at 84% 86%, rgba(90, 55, 50, 0.82) 0%, rgba(90, 55, 50, 0) 56%),
+                radial-gradient(circle at 88% 14%, rgba(62, 45, 80, 0.65) 0%, rgba(62, 45, 80, 0) 56%),
+                linear-gradient(135deg, #27233D 0%, #2F264B 58%, #221E37 100%);
+  }
+  .reading-pane { flex: 1; display: flex; flex-direction: column; position: relative; }
+  .reading-body { padding: 24px 32px; max-width: 720px; display: flex; flex-direction: column; gap: 14px; }
+  .ai-strip {
+    padding: 8px 12px;
+    border-radius: 7px;
+    background: var(--sunken);
+    border: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink2);
+  }
+  .hud-capsule {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: var(--raised);
+    border: 1px solid var(--line-strong);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    font-size: 11.5px;
+    color: var(--ink2);
+    white-space: nowrap;
+  }
+
+  /* ⌘K 浮层 */
+  .palette-mask {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.22);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 86px;
+    z-index: 40;
+  }
+  .palette-box {
+    width: 540px;
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    box-shadow: 0 24px 56px rgba(0,0,0,0.25);
+    overflow: hidden;
+  }
+  .palette-input-row {
+    height: 46px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .palette-input-row input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    font-size: 13.5px;
+    font-family: inherit;
+    outline: none;
+  }
+  .palette-list { padding: 6px; max-height: 300px; overflow-y: auto; }
+  .palette-item {
+    width: 100%;
+    padding: 7.5px 10px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--ink2);
+    font-size: 13px;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    text-align: left;
+  }
+  .palette-item:hover { background: var(--sunken); color: var(--ink); }
+
+  .toast-pill {
+    position: absolute;
+    bottom: 18px;
+    right: 22px;
+    padding: 7px 13px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--canvas);
+    font-size: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    z-index: 30;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body data-theme="light" data-density="sunken">
+
+  <!-- 顶部原型对比条 -->
+  <div class="proto-bar">
+    <span>视图：</span>
+    <div class="proto-seg">
+      <button id="proto-mode-settings" class="active" onclick="setWorkspaceMode('settings')">设置台 (⌘,)</button>
+      <button id="proto-mode-deck" onclick="setWorkspaceMode('deck')">分拣台 (Esc)</button>
+    </div>
+    <div class="proto-divider"></div>
+    <span>分组排布：</span>
+    <div class="proto-seg">
+      <button id="density-sunken" class="active" onclick="setDensity('sunken')">A · 沉降卡片</button>
+      <button id="density-hairline" onclick="setDensity('hairline')">B · 纯白细线</button>
+    </div>
+    <div class="proto-divider"></div>
+    <span>外观：</span>
+    <div class="proto-seg">
+      <button id="top-theme-light" class="active" onclick="selectTheme('light')">浅色</button>
+      <button id="top-theme-dark" onclick="selectTheme('dark')">深色</button>
+    </div>
+  </div>
+
+  <!-- 仿真主窗口 -->
+  <div class="mac-window">
+
+    <!-- 左侧 206pt 边栏 -->
+    <aside class="sidebar">
+      <div class="traffic-lights">
+        <span class="tl close"></span>
+        <span class="tl min"></span>
+        <span class="tl max"></span>
+      </div>
+
+      <!-- 设置态侧边栏 -->
+      <div id="sidebar-settings" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+        <button class="back-deck-btn" onclick="setWorkspaceMode('deck')">
+          <svg width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+          <span>返回收件箱</span>
+          <span style="margin-left:auto;"><span class="kbd">esc</span></span>
+        </button>
+
+        <button class="cmd-trigger" onclick="openPalette()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span>搜索与命令</span>
+          <span style="margin-left:auto;"><span class="kbd">⌘K</span></span>
+        </button>
+
+        <div class="nav-scroll">
+          <div class="nav-group">
+            <div class="nav-group-label">连接与分拣</div>
+            <button class="nav-row active" data-tab="accounts" onclick="switchTab('accounts')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+              <span>邮箱与连接</span>
+            </button>
+            <button class="nav-row" data-tab="triage" onclick="switchTab('triage')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>分拣与护栏</span>
+            </button>
+            <button class="nav-row" data-tab="ai" onclick="switchTab('ai')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+              <span>AI 分类引擎</span>
+            </button>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-group-label">工作台</div>
+            <button class="nav-row" data-tab="appearance" onclick="switchTab('appearance')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+              <span>阅读与外观</span>
+            </button>
+            <button class="nav-row" data-tab="diagnostics" onclick="switchTab('diagnostics')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+              <span>快捷键与诊断</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-footer">
+          <span class="dot" id="footer-dot-settings" style="background: var(--sage);"></span>
+          <span class="footer-status mono">v0.4.0</span>
+          <span style="margin-left:auto;"></span>
+          <button class="icon-btn active" onclick="setWorkspaceMode('deck')" title="关闭设置 (⌘,)">
+            <svg width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- 收件箱态侧边栏 -->
+      <div id="sidebar-deck" class="hidden" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+        <div class="brand-row">
+          <div class="silk-logo"></div>
+          <span class="brand-title">Mailroom</span>
+        </div>
+
+        <div class="account-tabs" id="deck-account-pills"></div>
+
+        <button class="cmd-trigger" onclick="openPalette()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span>搜索与命令</span>
+          <span style="margin-left:auto;"><span class="kbd">⌘K</span></span>
+        </button>
+
+        <div class="nav-scroll">
+          <div class="nav-group">
+            <div class="nav-group-label">待你拍板</div>
+            <button class="nav-row active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+              <span>全部待处理</span>
+              <span class="nav-count mono">4</span>
+            </button>
+            <button class="nav-row sub"><span>真人来信</span><span class="nav-count mono">2</span></button>
+            <button class="nav-row sub"><span>合同与账单</span><span class="nav-count mono">1</span></button>
+            <button class="nav-row sub"><span>待你拍板</span><span class="nav-count mono">1</span></button>
+          </div>
+          <div class="nav-group">
+            <div class="nav-group-label">已分拣</div>
+            <button class="nav-row"><span>重要保留</span><span class="nav-count mono">3</span></button>
+            <button class="nav-row"><span>已自动归档</span><span class="nav-count mono">28</span></button>
+            <button class="nav-row"><span>废纸篓</span><span class="nav-count mono">19</span></button>
+          </div>
+        </div>
+
+        <div class="sidebar-footer">
+          <span class="dot" style="background: var(--sage);"></span>
+          <span class="footer-status">已省 24 分钟</span>
+          <span style="margin-left:auto;"></span>
+          <button class="icon-btn" onclick="toggleQuickTheme()" title="切换主题">
+            <svg width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <button class="icon-btn" onclick="setWorkspaceMode('settings')" title="设置 (⌘,)">
+            <svg width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 右侧圆角白纸工作台 -->
+    <main class="paper-sheet">
+
+      <!-- ==================== Settings 设置台（极简克制版） ==================== -->
+      <section id="view-settings" class="settings-pane">
+        <header class="settings-topbar">
+          <div class="breadcrumb">
+            <span>设置</span>
+            <span>/</span>
+            <strong id="topbar-section-name">邮箱与连接</strong>
+          </div>
+          <span class="kbd">⌘,</span>
+        </header>
+
+        <div class="settings-scroll" id="settings-scroll-area">
+
+          <!-- Tab 1: 邮箱与连接 -->
+          <div class="settings-container tab-panel" id="panel-accounts">
+            <h1 class="page-title">邮箱与连接</h1>
+
+            <div class="sec-block">
+              <div class="sec-head">
+                <span class="sec-title">连接与权限</span>
+                <button class="btn" style="height:22px; font-size:11px; padding:0 7px;" onclick="togglePermissionDemo()">预览未授权态</button>
+              </div>
+              <div class="card-group">
+                <div class="setting-row">
+                  <span class="row-title">数据源</span>
+                  <div class="seg-control">
+                    <button id="src-live" class="active" onclick="setSource('live')">Apple Mail</button>
+                    <button id="src-demo" onclick="setSource('demo')">演示数据</button>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <div>
+                    <div class="row-title">完全磁盘访问</div>
+                    <div class="row-sub mono hidden" id="fda-sub">缺少 ~/Library/Mail/V10 读取权限</div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:10px;" id="fda-right">
+                    <span class="status-inline"><span class="dot" style="background:var(--sage);"></span>已就绪</span>
+                    <button class="btn" onclick="showToast('Envelope Index 读取正常')">重新检测</button>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <span class="row-title">自动化控制「邮件」</span>
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="status-inline"><span class="dot" style="background:var(--sage);"></span>已授权</span>
+                    <button class="btn" id="btn-verify-automation" onclick="verifyAutomation()">验证</button>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <span class="row-title">单次同步上限</span>
+                  <div class="seg-control">
+                    <button onclick="pickSeg(this)">50</button>
+                    <button class="active" onclick="pickSeg(this)">100</button>
+                    <button onclick="pickSeg(this)">200</button>
+                    <button onclick="pickSeg(this)">500</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sec-block">
+              <div class="sec-head">
+                <span class="sec-title">邮箱账户</span>
+              </div>
+              <div class="card-group" id="accounts-list-box"></div>
+            </div>
+
+            <div class="sec-block">
+              <div class="sec-head">
+                <span class="sec-title">本人发件别名</span>
+              </div>
+              <div class="card-group">
+                <div class="tag-inline-wrap" id="alias-tag-box"></div>
+              </div>
+              <div class="sec-footnote">包含本人地址参与回复的线程受保护，不会自动移入废纸篓。</div>
+            </div>
+          </div>
+
+          <!-- Tab 2: 分拣与护栏 -->
+          <div class="settings-container tab-panel hidden" id="panel-triage">
+            <h1 class="page-title">分拣与护栏</h1>
+
+            <div class="sec-block">
+              <div class="sec-head">
+                <span class="sec-title">自动分拣去向</span>
+              </div>
+              <div class="card-group" id="matrix-list-box"></div>
+            </div>
+
+            <div class="sec-block">
+              <div class="sec-head">
+                <span class="sec-title">护栏与白名单</span>
+              </div>
+              <div class="card-group">
+                <div class="setting-row">
+                  <span class="row-title">残缺或纯图片邮件留待人工核实</span>
+                  <button class="switch on" onclick="this.classList.toggle('on')"></button>
+                </div>
+                <div class="setting-row" style="align-items:flex-start; flex-direction:column; gap:8px;">
+                  <span class="row-title">受保护域名与发件人</span>
+                  <div class="tag-inline-wrap" id="vip-tag-box" style="padding:0; width:100%;"></div>
+                </div>
+              </div>
+              <div class="sec-footnote">星标邮件、本人参与的对话线程，以及合同签署与账单异常始终留在待处理。</div>
+            </div>
+          </div>
+
+          <!-- Tab 3: AI 分类引擎 -->
+          <div class="settings-container tab-panel hidden" id="panel-ai">
+            <h1 class="page-title">AI 分类引擎</h1>
+
+            <div class="sec-block">
+              <div class="sec-head">
+                <span class="sec-title">引擎模式</span>
+              </div>
+              <div class="engine-grid">
+                <button class="engine-card" id="eng-rules" onclick="selectEngine('rules')">
+                  <div class="engine-name"><span>本地规则</span><span class="quiet-tag">离线</span></div>
+                  <div class="engine-desc">词典与信头确定性判别</div>
+                </button>
+
+                <button class="engine-card selected" id="eng-hybrid" onclick="selectEngine('hybrid')">
+                  <div class="engine-name"><span>混合流水线</span><span class="quiet-tag">默认</span></div>
+                  <div class="engine-desc">规则初筛 + 模型语义判别</div>
+                </button>
+
+                <button class="engine-card" id="eng-local" onclick="selectEngine('local')">
+                  <div class="engine-name"><span>本地模型</span></div>
+                  <div class="engine-desc">Ollama / LM Studio</div>
+                </button>
+              </div>
+            </div>
+
+            <div class="sec-block" id="llm-config-section">
+              <div class="sec-head">
+                <span class="sec-title" id="llm-sec-title">模型连接</span>
+              </div>
+              <div class="card-group">
+                <div class="setting-row" id="provider-row">
+                  <span class="row-title">服务商</span>
+                  <div class="seg-control">
+                    <button class="active" onclick="selectProvider('gemini', this)">Gemini</button>
+                    <button onclick="selectProvider('claude', this)">Claude</button>
+                    <button onclick="selectProvider('openai', this)">OpenAI</button>
+                    <button onclick="selectProvider('custom', this)">自定义</button>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <span class="row-title">Endpoint</span>
+                  <input class="text-input mono" id="input-endpoint" value="https://generativelanguage.googleapis.com/v1beta" />
+                </div>
+
+                <div class="setting-row" id="apikey-row">
+                  <span class="row-title">API Key <span class="quiet-tag">钥匙串</span></span>
+                  <div style="display:flex; gap:6px; align-items:center;">
+                    <input type="password" class="text-input mono" id="input-apikey" style="width:236px;" value="AIzaSyDemoKey9283749283" placeholder="输入密钥…" />
+                    <button class="btn" onclick="toggleKeyVis()" id="btn-eye">显示</button>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <span class="row-title">模型</span>
+                  <div style="display:flex; gap:6px; align-items:center;">
+                    <input class="text-input mono" id="input-model" style="width:216px;" value="gemini-2.5-flash" />
+                    <button class="btn" id="btn-test-llm" onclick="testLLMConnection()">测试连接</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sec-block">
+              <div class="sec-head">
+                <span class="sec-title">判别门限与数据范围</span>
+              </div>
+              <div class="card-group">
+                <div class="setting-row">
+                  <div>
+                    <div class="row-title">自动分拣确信度门限</div>
+                    <div class="row-sub">低于门限的邮件留在待处理并以虚线标出</div>
+                  </div>
+                  <div class="slider-wrap">
+                    <span class="mono" style="font-size:12.5px; color:var(--ink); width:34px; text-align:right;" id="threshold-readout">90%</span>
+                    <input type="range" min="80" max="98" value="90" id="threshold-slider" oninput="updateThreshold(this.value)" />
+                  </div>
+                </div>
+
+                <div class="setting-row" id="payload-row">
+                  <span class="row-title">送审内容范围</span>
+                  <div class="seg-control">
+                    <button class="active" onclick="pickSeg(this)">前 1,500 字纯文本</button>
+                    <button onclick="pickSeg(this)">仅主题与发件人</button>
+                  </div>
+                </div>
+
+                <div class="setting-row" id="cache-llm-row">
+                  <span class="row-title">本地缓存判别结果</span>
+                  <button class="switch on" onclick="this.classList.toggle('on')"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 4: 阅读与外观 -->
+          <div class="settings-container tab-panel hidden" id="panel-appearance">
+            <h1 class="page-title">阅读与外观</h1>
+
+            <div class="sec-block">
+              <div class="sec-head">
+                <span class="sec-title">主题</span>
+              </div>
+              <div class="theme-grid">
+                <div class="theme-card" id="tcard-system" onclick="selectTheme('system')">
+                  <div class="theme-preview">
+                    <div style="width:50%; background:#FAFBFD; display:flex; padding:5px;">
+                      <div style="flex:1; background:#FFF; border-radius:3px; border:1px solid rgba(0,0,0,0.06); padding:5px;">
+                        <div class="tp-row-active" style="background:rgba(15,17,23,0.08);"></div>
+                      </div>
+                    </div>
+                    <div style="width:50%; background:#101114; display:flex; padding:5px;">
+                      <div style="flex:1; background:#16171B; border-radius:3px; border:1px solid rgba(255,255,255,0.08); padding:5px;">
+                        <div class="tp-row-active" style="background:rgba(255,255,255,0.12);"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="theme-label">跟随系统</div>
+                </div>
+
+                <div class="theme-card selected" id="tcard-light" onclick="selectTheme('light')">
+                  <div class="theme-preview" style="background:#FAFBFD;">
+                    <div class="tp-side">
+                      <div class="tp-bar" style="background:#0F1117; width:70%;"></div>
+                      <div class="tp-bar" style="background:#0F1117; width:90%;"></div>
+                    </div>
+                    <div class="tp-paper" style="background:#FFFFFF; border:1px solid rgba(15,20,32,0.06);">
+                      <div class="tp-row-active" style="background:rgba(15,17,23,0.07);"></div>
+                      <div class="tp-bar" style="background:#0F1117; width:75%;"></div>
+                    </div>
+                  </div>
+                  <div class="theme-label">浅色</div>
+                </div>
+
+                <div class="theme-card" id="tcard-dark" onclick="selectTheme('dark')">
+                  <div class="theme-preview" style="background:#101114;">
+                    <div class="tp-side">
+                      <div class="tp-bar" style="background:#ECEDEF; width:70%;"></div>
+                      <div class="tp-bar" style="background:#ECEDEF; width:90%;"></div>
+                    </div>
+                    <div class="tp-paper" style="background:#16171B; border:1px solid rgba(255,255,255,0.07);">
+                      <div class="tp-row-active" style="background:rgba(255,255,255,0.11);"></div>
+                      <div class="tp-bar" style="background:#ECEDEF; width:75%;"></div>
+                    </div>
+                  </div>
+                  <div class="theme-label">深色</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sec-block">
+              <div class="sec-head">
+                <span class="sec-title">阅读与界面</span>
+              </div>
+              <div class="card-group">
+                <div class="setting-row">
+                  <span class="row-title">默认正文格式</span>
+                  <div class="seg-control">
+                    <button id="fmt-html" class="active" onclick="setBodyFormat('html')">富文本</button>
+                    <button id="fmt-plain" onclick="setBodyFormat('plain')">纯文本</button>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <span class="row-title">远程图片</span>
+                  <div class="seg-control">
+                    <button class="active" onclick="pickSeg(this)">默认拦截</button>
+                    <button onclick="pickSeg(this)">始终加载</button>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <span class="row-title">底部快捷键提示条</span>
+                  <button class="switch on" id="sw-hud" onclick="toggleHudSwitch(this)"></button>
+                </div>
+
+                <div class="setting-row">
+                  <span class="row-title">默认展开 AI 判据条</span>
+                  <button class="switch on" id="sw-aistrip" onclick="toggleAiStripSwitch(this)"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 5: 快捷键与诊断 -->
+          <div class="settings-container tab-panel hidden" id="panel-diagnostics">
+            <h1 class="page-title">快捷键与诊断</h1>
+
+            <div class="sec-block">
+              <div class="sec-head">
+                <span class="sec-title">快捷键</span>
+              </div>
+              <div class="shortcut-grid">
+                <div class="card-group">
+                  <div class="shortcut-item"><span>上下移动焦点</span><span style="display:flex;gap:4px;"><span class="kbd letter">J</span><span class="kbd letter">K</span></span></div>
+                  <div class="shortcut-item"><span>阅毕归档</span><span class="kbd">Space</span></div>
+                  <div class="shortcut-item"><span>重要保留</span><span class="kbd">⇧K</span></div>
+                  <div class="shortcut-item"><span>移入废纸篓</span><span class="kbd">⌫</span></div>
+                  <div class="shortcut-item"><span>拉回待处理</span><span class="kbd letter">R</span></div>
+                  <div class="shortcut-item"><span>撤销</span><span class="kbd letter">Z</span></div>
+                </div>
+                <div class="card-group">
+                  <div class="shortcut-item"><span>切换分拣夹</span><span style="display:flex;gap:4px;"><span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span></span></div>
+                  <div class="shortcut-item"><span>在 Apple Mail 打开</span><span class="kbd">↵</span></div>
+                  <div class="shortcut-item"><span>展开 / 收起判据</span><span class="kbd letter">I</span></div>
+                  <div class="shortcut-item"><span>收起 / 展开侧栏</span><span class="kbd">[</span></div>
+                  <div class="shortcut-item"><span>搜索与命令</span><span class="kbd">⌘K</span></div>
+                  <div class="shortcut-item"><span>打开 / 关闭设置</span><span class="kbd">⌘,</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sec-block">
+              <div class="sec-head">
+                <span class="sec-title">诊断与缓存</span>
+              </div>
+              <div class="stats-strip">
+                <div class="stat-cell">
+                  <div class="stat-val mono"><span class="dot" style="background:var(--sage);"></span>WAL 正常</div>
+                  <div class="stat-lbl">Envelope Index</div>
+                </div>
+                <div class="stat-cell">
+                  <div class="stat-val mono" id="diag-hitrate">99.4%</div>
+                  <div class="stat-lbl">.emlx 命中率</div>
+                </div>
+                <div class="stat-cell">
+                  <div class="stat-val mono">0</div>
+                  <div class="stat-lbl">待结算变更</div>
+                </div>
+                <div class="stat-cell">
+                  <div class="stat-val mono" id="diag-cachesize">14.2 MB</div>
+                  <div class="stat-lbl">本地缓存</div>
+                </div>
+              </div>
+
+              <div class="card-group" style="margin-top:2px;">
+                <div class="setting-row">
+                  <span class="row-title">连接诊断</span>
+                  <div style="display:flex; gap:6px;">
+                    <button class="btn" onclick="runDoctorCheck()">重新自检</button>
+                    <button class="btn" onclick="showToast('已复制脱敏诊断 JSON')">复制报告</button>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <span class="row-title">本地解析缓存</span>
+                  <div id="cache-reset-box">
+                    <button class="btn" onclick="askRebuildCache()">重建缓存…</button>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <span class="row-title">离线评测样本</span>
+                  <button class="btn" onclick="showToast('已导出至 /tmp/mailroom-eval.json')">导出 JSON…</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==================== Inbox 仿真分拣台 ==================== -->
+      <section id="view-deck" class="deck-pane hidden">
+        <div class="mail-list">
+          <div class="pane-header">
+            <strong style="font-size:13px;">全部待处理</strong>
+            <span class="mono" style="font-size:11.5px; color:var(--ink3);">4</span>
+          </div>
+
+          <div class="mail-row selected">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="dot" style="background:var(--amber);"></span>
+              <strong style="font-size:12.5px; color:var(--ink);">Stripe Billing</strong>
+              <span class="quiet-tag" style="margin-left:2px;">条款变更</span>
+              <span class="mono" style="margin-left:auto; font-size:11px; color:var(--ink3);">10:42</span>
+            </div>
+            <div style="font-size:12.5px; font-weight:500; color:var(--ink);">Pricing & usage tier update starting Dec 1</div>
+            <div style="font-size:11.5px; color:var(--ink2); line-height:1.4;">“At the current rate, your workspace will exceed the included tier around Dec 8.”</div>
+          </div>
+
+          <div class="mail-row">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="dot" style="background:var(--cobalt);"></span>
+              <strong style="font-size:12.5px; color:var(--ink);">林知夏</strong>
+              <span class="mono" style="margin-left:auto; font-size:11px; color:var(--ink3);">09:15</span>
+            </div>
+            <div style="font-size:12.5px; color:var(--ink2);">下周三下午架构评审时间确认</div>
+            <div style="font-size:11.5px; color:var(--ink3);">“周三下午三点你有空一起过一下缓存迁移方案吗？”</div>
+          </div>
+        </div>
+
+        <div class="reading-pane">
+          <div class="pane-header">
+            <span class="mono" style="font-size:11.5px; color:var(--ink3);">1 / 4</span>
+            <span style="margin-left:auto; display:flex; gap:6px;">
+              <button class="btn" onclick="showToast('已归档')">归档</button>
+              <button class="btn" onclick="showToast('已保留')">保留</button>
+              <button class="btn" id="deck-format-pill" onclick="toggleDeckFormatInline()">富文本</button>
+            </span>
+          </div>
+
+          <div class="reading-body">
+            <h2 style="font-size:18px; font-weight:600; color:var(--ink);">Pricing & usage tier update starting Dec 1</h2>
+
+            <div id="deck-ai-strip" class="ai-strip">
+              <span style="color:var(--ink3); margin-right:6px;">判据 94% ·</span>
+              <span>“your workspace will exceed the included tier around Dec 8.”</span>
+            </div>
+
+            <div id="deck-body-content" style="font-size:13.5px; line-height:1.75; color:var(--ink2);">
+              <p style="margin-bottom:12px;">Hi team,</p>
+              <p style="margin-bottom:12px;">We are writing to let you know about upcoming adjustments to your Stripe Billing volume tier. At the current rate, your workspace will exceed the included tier around Dec 8.</p>
+              <p style="color:var(--ink3); font-size:12.5px;">按 <span class="kbd">⌘,</span> 或左下角齿轮可切回设置台。</p>
+            </div>
+          </div>
+
+          <div id="deck-hud" class="hud-capsule">
+            <span class="kbd letter">J</span><span class="kbd letter">K</span><span>切换</span>
+            <span style="opacity:0.25;">|</span>
+            <span class="kbd">Space</span><span>归档</span>
+            <span style="opacity:0.25;">|</span>
+            <span class="kbd">⇧K</span><span>保留</span>
+            <span style="opacity:0.25;">|</span>
+            <span class="kbd">⌫</span><span>推广</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⌘K 命令面板 -->
+      <div id="palette-overlay" class="palette-mask hidden" onclick="if(event.target===this) closePalette()">
+        <div class="palette-box">
+          <div class="palette-input-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink3);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="palette-input" placeholder="搜索设置或命令…" oninput="renderPaletteList(this.value)" />
+            <span class="kbd">esc</span>
+          </div>
+          <div class="palette-list" id="palette-list"></div>
+        </div>
+      </div>
+
+      <div id="toast" class="toast-pill hidden"></div>
+
+    </main>
+  </div>
+
+<script>
+  const colorOrder = ["cobalt", "sage", "amber", "coral"];
+  const colorMap = {
+    cobalt: "var(--cobalt)",
+    sage: "var(--sage)",
+    amber: "var(--amber)",
+    coral: "var(--coral)"
+  };
+
+  const state = {
+    workspace: "settings",
+    tab: "accounts",
+    themePref: "light",
+    density: "sunken",
+    fdaMissingDemo: false,
+    engine: "hybrid",
+    threshold: 90,
+    bodyFormat: "html",
+    showHud: true,
+    showAiStrip: true,
+    accounts: [
+      { id: "work", enabled: true, label: "工作", address: "nd@acme-corp.io", color: "cobalt", archivePath: "[Gmail]/All Mail", trashPath: "[Gmail]/Trash" },
+      { id: "personal", enabled: true, label: "个人", address: "nd.personal@icloud.com", color: "sage", archivePath: "Archive", trashPath: "Deleted Messages" },
+      { id: "campus", enabled: false, label: "校友", address: "nd2024@alumni.edu", color: "amber", archivePath: "Archive", trashPath: "Deleted Items" }
+    ],
+    aliases: ["nd.forward@gmail.com"],
+    vips: ["@acme-corp.io", "legal@partner.com"],
+    matrix: [
+      { id: "otp", name: "验证码与登录安全码", mode: "archive" },
+      { id: "ship", name: "物流与派送通知", mode: "archive" },
+      { id: "receipt", name: "常规收据与账单回执", mode: "archive" },
+      { id: "social", name: "平台与社交通知", mode: "archive" },
+      { id: "digest", name: "资讯订阅 Newsletter", mode: "trash" },
+      { id: "promo", name: "营销与促销推广", mode: "trash" }
+    ]
+  };
+
+  const tabTitles = {
+    accounts: "邮箱与连接",
+    triage: "分拣与护栏",
+    ai: "AI 分类引擎",
+    appearance: "阅读与外观",
+    diagnostics: "快捷键与诊断"
+  };
+
+  function setWorkspaceMode(mode) {
+    state.workspace = mode;
+    document.getElementById("view-settings").classList.toggle("hidden", mode !== "settings");
+    document.getElementById("view-deck").classList.toggle("hidden", mode !== "deck");
+    document.getElementById("sidebar-settings").classList.toggle("hidden", mode !== "settings");
+    document.getElementById("sidebar-deck").classList.toggle("hidden", mode !== "deck");
+    document.getElementById("proto-mode-settings").classList.toggle("active", mode === "settings");
+    document.getElementById("proto-mode-deck").classList.toggle("active", mode === "deck");
+    if (mode === "deck") renderDeckAccountPills();
+  }
+
+  function switchTab(tabId) {
+    if (state.workspace !== "settings") setWorkspaceMode("settings");
+    state.tab = tabId;
+    document.querySelectorAll("#sidebar-settings .nav-row").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.tab === tabId);
+    });
+    document.querySelectorAll(".tab-panel").forEach(panel => {
+      panel.classList.toggle("hidden", panel.id !== "panel-" + tabId);
+    });
+    document.getElementById("topbar-section-name").textContent = tabTitles[tabId];
+    document.getElementById("settings-scroll-area").scrollTop = 0;
+  }
+
+  function setDensity(mode) {
+    state.density = mode;
+    document.body.dataset.density = mode;
+    document.getElementById("density-sunken").classList.toggle("active", mode === "sunken");
+    document.getElementById("density-hairline").classList.toggle("active", mode === "hairline");
+  }
+
+  function selectTheme(pref) {
+    state.themePref = pref;
+    const effective = pref === "system" ? "light" : pref;
+    document.body.dataset.theme = effective;
+    ["system", "light", "dark"].forEach(k => {
+      const el = document.getElementById("tcard-" + k);
+      if (el) el.classList.toggle("selected", k === pref);
+    });
+    document.getElementById("top-theme-light").classList.toggle("active", effective === "light");
+    document.getElementById("top-theme-dark").classList.toggle("active", effective === "dark");
+  }
+
+  function toggleQuickTheme() {
+    selectTheme(document.body.dataset.theme === "dark" ? "light" : "dark");
+  }
+
+  function pickSeg(btn) {
+    btn.parentElement.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+
+  function setSource(src) {
+    document.getElementById("src-live").classList.toggle("active", src === "live");
+    document.getElementById("src-demo").classList.toggle("active", src === "demo");
+    document.getElementById("footer-dot-settings").style.background = src === "live" ? "var(--sage)" : "var(--amber)";
+  }
+
+  function togglePermissionDemo() {
+    state.fdaMissingDemo = !state.fdaMissingDemo;
+    const sub = document.getElementById("fda-sub");
+    const right = document.getElementById("fda-right");
+    if (state.fdaMissingDemo) {
+      sub.classList.remove("hidden");
+      right.innerHTML = `
+        <span class="status-inline"><span class="dot" style="background:var(--amber);"></span>待授权</span>
+        <button class="btn" onclick="showToast('正在打开系统设置…')">系统设置</button>
+        <button class="btn solid" onclick="togglePermissionDemo()">重连</button>
+      `;
+    } else {
+      sub.classList.add("hidden");
+      right.innerHTML = `
+        <span class="status-inline"><span class="dot" style="background:var(--sage);"></span>已就绪</span>
+        <button class="btn" onclick="showToast('Envelope Index 读取正常')">重新检测</button>
+      `;
+    }
+  }
+
+  function verifyAutomation() {
+    const btn = document.getElementById("btn-verify-automation");
+    btn.textContent = "验证中…";
+    setTimeout(() => {
+      btn.textContent = "✓ 42ms";
+      setTimeout(() => { btn.textContent = "验证"; }, 1800);
+    }, 260);
+  }
+
+  function renderAccounts() {
+    const box = document.getElementById("accounts-list-box");
+    box.innerHTML = state.accounts.map((acc, idx) => `
+      <div class="acc-row" style="opacity:${acc.enabled ? 1 : 0.48};">
+        <button class="switch ${acc.enabled ? "on" : ""}" onclick="toggleAccount(${idx})"></button>
+        <button class="single-dot-btn" onclick="cycleAccountColor(${idx})" title="点击切换圆点色">
+          <span class="dot-lg" style="background:${colorMap[acc.color]};"></span>
+        </button>
+        <input class="inline-label-input" value="${acc.label}" oninput="setAccountLabel(${idx}, this.value)" />
+        <span class="mono" style="font-size:12px; color:var(--ink3);">${acc.address}</span>
+        <span class="acc-paths mono">${acc.archivePath} · ${acc.trashPath}</span>
+      </div>
+    `).join("");
+  }
+
+  function toggleAccount(idx) {
+    state.accounts[idx].enabled = !state.accounts[idx].enabled;
+    renderAccounts();
+  }
+  function cycleAccountColor(idx) {
+    const cur = colorOrder.indexOf(state.accounts[idx].color);
+    state.accounts[idx].color = colorOrder[(cur + 1) % colorOrder.length];
+    renderAccounts();
+  }
+  function setAccountLabel(idx, val) {
+    state.accounts[idx].label = val || "邮箱";
+  }
+
+  function renderDeckAccountPills() {
+    const enabled = state.accounts.filter(a => a.enabled);
+    const el = document.getElementById("deck-account-pills");
+    el.innerHTML = `<button class="acc-tab active">全部</button>` + enabled.map(a => `
+      <button class="acc-tab">
+        <span class="dot" style="background:${colorMap[a.color]};"></span>
+        <span>${a.label}</span>
+      </button>
+    `).join("");
+  }
+
+  function renderTagBox(boxId, lockedItems, listRef, placeholder, listKey) {
+    const box = document.getElementById(boxId);
+    const lockedHtml = lockedItems.map(t => `<span class="chip locked mono">${t}</span>`).join("");
+    const customHtml = listRef.map((t, i) => `
+      <span class="chip mono">${t}<button onclick="removeTag('${listKey}', ${i})">×</button></span>
+    `).join("");
+    box.innerHTML = lockedHtml + customHtml + `
+      <input class="tag-input" placeholder="${placeholder}" onkeydown="handleTagKey(event, '${listKey}')" />
+    `;
+  }
+
+  function handleTagKey(e, listKey) {
+    if (e.key === "Enter" && e.target.value.trim()) {
+      e.preventDefault();
+      state[listKey].push(e.target.value.trim());
+      refreshAllTags();
+    }
+  }
+  function removeTag(listKey, idx) {
+    state[listKey].splice(idx, 1);
+    refreshAllTags();
+  }
+  function refreshAllTags() {
+    renderTagBox("alias-tag-box", ["nd@acme-corp.io", "nd.personal@icloud.com"], state.aliases, "添加别名后回车…", "aliases");
+    renderTagBox("vip-tag-box", [".edu", ".edu.cn", ".gov"], state.vips, "添加域名或邮箱后回车…", "vips");
+  }
+
+  function renderMatrix() {
+    const box = document.getElementById("matrix-list-box");
+    box.innerHTML = state.matrix.map((row, idx) => `
+      <div class="setting-row">
+        <span class="row-title">${row.name}</span>
+        <div class="seg-control">
+          <button class="${row.mode === "inbox" ? "active" : ""}" onclick="setMatrixMode(${idx}, 'inbox')">待处理</button>
+          <button class="${row.mode === "archive" ? "active" : ""}" onclick="setMatrixMode(${idx}, 'archive')">归档</button>
+          <button class="${row.mode === "trash" ? "active" : ""}" onclick="setMatrixMode(${idx}, 'trash')">废纸篓</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function setMatrixMode(idx, mode) {
+    state.matrix[idx].mode = mode;
+    renderMatrix();
+  }
+
+  function selectEngine(eng) {
+    state.engine = eng;
+    ["rules", "hybrid", "local"].forEach(k => {
+      document.getElementById("eng-" + k).classList.toggle("selected", k === eng);
+    });
+    const llmSec = document.getElementById("llm-config-section");
+    const payloadRow = document.getElementById("payload-row");
+    const cacheLlmRow = document.getElementById("cache-llm-row");
+    const apiKeyRow = document.getElementById("apikey-row");
+    const providerRow = document.getElementById("provider-row");
+    const ep = document.getElementById("input-endpoint");
+    const mdl = document.getElementById("input-model");
+
+    if (eng === "rules") {
+      llmSec.classList.add("hidden");
+      payloadRow.classList.add("hidden");
+      cacheLlmRow.classList.add("hidden");
+    } else if (eng === "local") {
+      llmSec.classList.remove("hidden");
+      payloadRow.classList.remove("hidden");
+      cacheLlmRow.classList.remove("hidden");
+      providerRow.classList.add("hidden");
+      apiKeyRow.classList.add("hidden");
+      ep.value = "http://127.0.0.1:11434/v1";
+      mdl.value = "qwen2.5:7b-instruct";
+    } else {
+      llmSec.classList.remove("hidden");
+      payloadRow.classList.remove("hidden");
+      cacheLlmRow.classList.remove("hidden");
+      providerRow.classList.remove("hidden");
+      apiKeyRow.classList.remove("hidden");
+      ep.value = "https://generativelanguage.googleapis.com/v1beta";
+      mdl.value = "gemini-2.5-flash";
+    }
+  }
+
+  function selectProvider(p, btn) {
+    pickSeg(btn);
+    const ep = document.getElementById("input-endpoint");
+    const mdl = document.getElementById("input-model");
+    if (p === "gemini") {
+      ep.value = "https://generativelanguage.googleapis.com/v1beta";
+      mdl.value = "gemini-2.5-flash";
+    } else if (p === "claude") {
+      ep.value = "https://api.anthropic.com/v1";
+      mdl.value = "claude-haiku-4-5";
+    } else if (p === "openai") {
+      ep.value = "https://api.openai.com/v1";
+      mdl.value = "gpt-4o-mini";
+    } else {
+      ep.value = "https://your-gateway.example.com/v1";
+      mdl.value = "deepseek-chat";
+    }
+  }
+
+  function toggleKeyVis() {
+    const inp = document.getElementById("input-apikey");
+    const btn = document.getElementById("btn-eye");
+    inp.type = inp.type === "password" ? "text" : "password";
+    btn.textContent = inp.type === "password" ? "显示" : "隐藏";
+  }
+
+  function testLLMConnection() {
+    const btn = document.getElementById("btn-test-llm");
+    btn.textContent = "连接中…";
+    setTimeout(() => {
+      btn.textContent = "✓ 248ms";
+      setTimeout(() => { btn.textContent = "测试连接"; }, 2200);
+    }, 320);
+  }
+
+  function updateThreshold(val) {
+    state.threshold = parseInt(val, 10);
+    document.getElementById("threshold-readout").textContent = state.threshold + "%";
+  }
+
+  function setBodyFormat(fmt) {
+    state.bodyFormat = fmt;
+    document.getElementById("fmt-html").classList.toggle("active", fmt === "html");
+    document.getElementById("fmt-plain").classList.toggle("active", fmt === "plain");
+    document.getElementById("deck-format-pill").textContent = fmt === "html" ? "富文本" : "纯文本";
+    document.getElementById("deck-body-content").classList.toggle("mono", fmt === "plain");
+  }
+
+  function toggleDeckFormatInline() {
+    setBodyFormat(state.bodyFormat === "html" ? "plain" : "html");
+  }
+
+  function toggleHudSwitch(btn) {
+    btn.classList.toggle("on");
+    state.showHud = btn.classList.contains("on");
+    document.getElementById("deck-hud").classList.toggle("hidden", !state.showHud);
+  }
+
+  function toggleAiStripSwitch(btn) {
+    btn.classList.toggle("on");
+    state.showAiStrip = btn.classList.contains("on");
+    document.getElementById("deck-ai-strip").classList.toggle("hidden", !state.showAiStrip);
+  }
+
+  function runDoctorCheck() {
+    document.getElementById("diag-hitrate").textContent = "100%";
+    showToast("自检正常");
+  }
+
+  function askRebuildCache() {
+    document.getElementById("cache-reset-box").innerHTML = `
+      <div style="display:flex; gap:6px;">
+        <button class="btn" onclick="cancelRebuildCache()">取消</button>
+        <button class="btn confirm-danger" onclick="confirmRebuildCache()">确认重建</button>
+      </div>
+    `;
+  }
+  function cancelRebuildCache() {
+    document.getElementById("cache-reset-box").innerHTML = `<button class="btn" onclick="askRebuildCache()">重建缓存…</button>`;
+  }
+  function confirmRebuildCache() {
+    document.getElementById("diag-cachesize").textContent = "0.4 MB";
+    cancelRebuildCache();
+    showToast("正在后台增量重建缓存");
+  }
+
+  const paletteItems = [
+    { title: "设置：邮箱与连接", kbd: "⌘,", action: () => switchTab("accounts") },
+    { title: "设置：分拣与护栏", kbd: null, action: () => switchTab("triage") },
+    { title: "设置：AI 分类引擎", kbd: null, action: () => switchTab("ai") },
+    { title: "设置：阅读与外观", kbd: null, action: () => switchTab("appearance") },
+    { title: "设置：快捷键与诊断", kbd: null, action: () => switchTab("diagnostics") },
+    { title: "切换深色 / 浅色模式", kbd: null, action: () => toggleQuickTheme() },
+    { title: "返回收件箱", kbd: "esc", action: () => setWorkspaceMode("deck") }
+  ];
+
+  function openPalette() {
+    document.getElementById("palette-overlay").classList.remove("hidden");
+    const inp = document.getElementById("palette-input");
+    inp.value = "";
+    renderPaletteList("");
+    setTimeout(() => inp.focus(), 20);
+  }
+  function closePalette() {
+    document.getElementById("palette-overlay").classList.add("hidden");
+  }
+  function renderPaletteList(q) {
+    const query = q.trim().toLowerCase();
+    const list = document.getElementById("palette-list");
+    const filtered = paletteItems.filter(it => !query || it.title.toLowerCase().includes(query));
+    list.innerHTML = filtered.map(it => `
+      <button class="palette-item" onclick="runPaletteIdx(${paletteItems.indexOf(it)})">
+        <span>${it.title}</span>
+        ${it.kbd ? `<span class="kbd">${it.kbd}</span>` : ""}
+      </button>
+    `).join("");
+  }
+  function runPaletteIdx(i) {
+    closePalette();
+    paletteItems[i].action();
+  }
+
+  let toastTimer = null;
+  function showToast(msg) {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.remove("hidden");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.add("hidden"), 2000);
+  }
+
+  window.addEventListener("keydown", (e) => {
+    const isInput = ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName);
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      const open = !document.getElementById("palette-overlay").classList.contains("hidden");
+      open ? closePalette() : openPalette();
+      return;
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key === ",") {
+      e.preventDefault();
+      setWorkspaceMode(state.workspace === "settings" ? "deck" : "settings");
+      return;
+    }
+    if (e.key === "Escape") {
+      if (!document.getElementById("palette-overlay").classList.contains("hidden")) {
+        e.preventDefault();
+        closePalette();
+        return;
+      }
+      if (!isInput && state.workspace === "settings") {
+        e.preventDefault();
+        setWorkspaceMode("deck");
+      }
+    }
+  });
+
+  renderAccounts();
+  refreshAllTags();
+  renderMatrix();
+  renderDeckAccountPills();
+</script>
+</body>
+</html>

@@ -1,0 +1,1349 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mailroom · 流体艺术选中态实验室 (v5 干练冷调背景)</title>
+  <style>
+    /* ==========================================================================
+       BACKGROUND PRESET A: PURE ALABASTER WHITE (极净纯白一体 · 最通透干练)
+       侧栏与纸面几乎一体纯白，彻底告别暖灰/米灰的沉闷感
+       ========================================================================== */
+    :root,
+    [data-bg="pure"] {
+      --outer-bg: #EDF0F5;
+      --canvas: #FAFBFD;        /* 99% 极高明度冷雪白侧栏，干净通透 */
+      --paper: #FFFFFF;         /* 100% 纯白纸面 */
+      --paper-subtle: #FCFDFE;
+      --sunken: #F5F7FA;        /* 清透冷冰白洞察卡，绝不泛黄 */
+      --ink: #0F1117;           /* 干练碳黑主字 */
+      --ink2: #484E5C;          /* 冷石板灰次级字 */
+      --ink3: #878E9C;          /* 冷银灰辅助字 */
+      --line: rgba(15, 20, 32, 0.055);
+      --line-soft: rgba(15, 20, 32, 0.04);
+      --line-strong: rgba(15, 20, 32, 0.095);
+
+      --control-fill: rgba(15, 23, 42, 0.045);
+      --active-nav-fill: rgba(15, 23, 42, 0.06);
+      --hover-fill: rgba(15, 23, 42, 0.026);
+      --panel-bg: rgba(255, 255, 255, 0.92);
+      --pill-surface: #F4F6FA;
+
+      --cobalt: #3B63E6;
+      --sage: #25855A;
+      --amber: #B86E14;
+      --coral: #D1434E;
+    }
+
+    /* ==========================================================================
+       BACKGROUND PRESET B: LINEAR TITANIUM SLATE (Linear 冷钛银灰 · 建筑感冷调)
+       严格采用 R < G < B 的冷色温钛灰，干练利落
+       ========================================================================== */
+    [data-bg="titanium"] {
+      --outer-bg: #E6EAF0;
+      --canvas: #F3F5F9;        /* 冷钛银灰侧栏 */
+      --paper: #FFFFFF;
+      --paper-subtle: #F9FAFC;
+      --sunken: #F2F4F8;        /* 冷调金属灰洞察框 */
+      --ink: #0B0D13;
+      --ink2: #454B59;
+      --ink3: #838A99;
+      --line: rgba(15, 23, 42, 0.06);
+      --line-soft: rgba(15, 23, 42, 0.045);
+      --line-strong: rgba(15, 23, 42, 0.105);
+      --control-fill: rgba(15, 23, 42, 0.052);
+      --active-nav-fill: rgba(15, 23, 42, 0.072);
+    }
+
+    /* ==========================================================================
+       BACKGROUND PRESET C: GLACIAL SLATE CONTRAST (清冽冷雾底 · 高反差层叠)
+       侧栏采用冷雾蓝灰 #EEF2F6，把右侧 #FFFFFF 纯白纸张衬托得极度锋利
+       ========================================================================== */
+    [data-bg="glacial"] {
+      --outer-bg: #E2E7F0;
+      --canvas: #EEF2F6;        /* 清冽冷雾石板底 */
+      --paper: #FFFFFF;
+      --paper-subtle: #F8FAFC;
+      --sunken: #F1F5F9;
+      --ink: #0F172A;
+      --ink2: #475569;
+      --ink3: #8291A6;
+      --line: rgba(15, 23, 42, 0.06);
+      --line-soft: rgba(15, 23, 42, 0.045);
+      --line-strong: rgba(15, 23, 42, 0.11);
+      --control-fill: rgba(15, 23, 42, 0.055);
+      --active-nav-fill: rgba(255, 255, 255, 0.85);
+    }
+
+    /* ==========================================================================
+       BACKGROUND PRESET D: LEGACY WARM STONE (旧版 #F3F3F2 暖石膏灰 · 对照)
+       之前 SwiftUI DeckTheme.swift 与旧原型里泛黄发闷的暖灰背景
+       ========================================================================== */
+    [data-bg="warm-legacy"] {
+      --outer-bg: #E5E4E0;
+      --canvas: #F3F2EE;        /* 偏黄暖石膏灰 (#F3F3F2 / #F3F2EE) */
+      --paper: #FDFCFA;         /* 偏暖纸张 */
+      --paper-subtle: #F8F7F4;
+      --sunken: #F4F3EF;        /* 偏暖米灰洞察框 */
+      --ink: #171719;
+      --ink2: #57575C;
+      --ink3: #8E8E95;
+      --line: rgba(23, 23, 25, 0.075);
+      --line-soft: rgba(23, 23, 25, 0.05);
+      --line-strong: rgba(23, 23, 25, 0.12);
+      --control-fill: rgba(23, 23, 25, 0.06);
+      --active-nav-fill: rgba(23, 23, 25, 0.085);
+    }
+
+    /* ==========================================================================
+       DARK THEME (Linear Obsidian Dark)
+       ========================================================================== */
+    [data-theme="dark"] {
+      --outer-bg: #090A0D;
+      --canvas: #101114;
+      --paper: #16171B;
+      --paper-subtle: #191A20;
+      --sunken: #1E1F26;
+      --ink: #ECEDEF;
+      --ink2: #A5A9B3;
+      --ink3: #686C77;
+      --line: rgba(255, 255, 255, 0.065);
+      --line-soft: rgba(255, 255, 255, 0.042);
+      --line-strong: rgba(255, 255, 255, 0.11);
+      --control-fill: rgba(255, 255, 255, 0.06);
+      --active-nav-fill: rgba(255, 255, 255, 0.085);
+      --hover-fill: rgba(255, 255, 255, 0.028);
+      --panel-bg: rgba(24, 26, 32, 0.92);
+      --pill-surface: #1E2027;
+
+      --cobalt: #6B9AFF;
+      --sage: #4CC38A;
+      --amber: #F1A638;
+      --coral: #F26B75;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+      background: var(--outer-bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 24px 28px;
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.15s ease;
+    }
+
+    /* Top Lab Control Strip */
+    .lab-bar {
+      width: 100%;
+      max-width: 1220px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--line-strong);
+      border-radius: 14px;
+      padding: 11px 16px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    }
+
+    .lab-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .lab-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .lab-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink3);
+      margin-right: 2px;
+    }
+
+    .seg {
+      display: inline-flex;
+      background: var(--sunken);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .seg button {
+      border: none;
+      background: transparent;
+      color: var(--ink2);
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 4.5px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      transition: background 0.12s ease, color 0.12s ease;
+    }
+    .seg button.active {
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      font-weight: 600;
+    }
+
+    .swatch-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-left: 10px;
+    }
+    .raw-shader-thumb {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    .raw-shader-thumb canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* App Window Frame */
+    .mac-window {
+      width: 100%;
+      max-width: 1220px;
+      height: 690px;
+      background: var(--canvas);
+      border-radius: 14px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12), 0 0 0 1px var(--line-strong);
+      display: flex;
+      overflow: hidden;
+      position: relative;
+      transition: background 0.15s ease;
+    }
+
+    /* Left Sidebar */
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+      padding: 2px 6px 16px;
+    }
+    .tl { width: 12px; height: 12px; border-radius: 50%; }
+    .tl.r { background: #FF5F57; }
+    .tl.y { background: #FEBC2E; }
+    .tl.g { background: #28C840; }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 4px 6px 14px;
+    }
+    .brand-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+      background: var(--ink);
+      display: grid;
+      place-items: center;
+      color: var(--canvas);
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .brand-icon canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .brand-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -0.015em;
+    }
+
+    .acct-strip {
+      display: flex;
+      gap: 2px;
+      background: var(--control-fill);
+      padding: 2.5px;
+      border-radius: 7px;
+      margin-bottom: 10px;
+    }
+    .acct-pill {
+      font-size: 11.5px;
+      padding: 3.5px 8px;
+      border-radius: 5px;
+      color: var(--ink2);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .acct-pill.on {
+      background: var(--paper);
+      color: var(--ink);
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--control-fill);
+      border-radius: 7px;
+      padding: 6px 9px;
+      font-size: 12px;
+      color: var(--ink3);
+      margin-bottom: 16px;
+    }
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 10.5px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: var(--control-fill);
+      color: var(--ink3);
+    }
+
+    .sec-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink3);
+      padding: 6px 8px 5px;
+    }
+
+    .nav-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 9px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      color: var(--ink2);
+      cursor: pointer;
+      margin-bottom: 2px;
+    }
+    .nav-item.active {
+      color: var(--ink);
+      font-weight: 600;
+      background: var(--active-nav-fill);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+    .nav-item > span {
+      position: relative;
+      z-index: 1;
+    }
+    .nav-count {
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 11.5px;
+      color: var(--ink3);
+    }
+
+    /* Inset Right Two-Pane Paper Card */
+    .paper-card {
+      flex: 1;
+      margin: 8px 8px 8px 0;
+      background: var(--paper);
+      border-radius: 12px;
+      box-shadow: 0 2px 14px rgba(15, 23, 42, 0.035), 0 0 0 1px var(--line-soft);
+      display: flex;
+      overflow: hidden;
+      transition: background 0.15s ease;
+    }
+
+    /* Middle Mail List */
+    .mail-list-pane {
+      width: 348px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .pane-header {
+      height: 44px;
+      padding: 4px 18px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .pane-header-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pane-header-title .cnt {
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--ink3);
+    }
+
+    .rows-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 0 10px;
+    }
+
+    .mail-row-outer {
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .mail-row-card {
+      position: relative;
+      margin: 1px 8px;
+      padding: 10.5px 12px;
+      border-radius: 11px;
+      overflow: hidden;
+      transition: transform 0.12s ease, box-shadow 0.16s ease, background 0.16s ease;
+    }
+
+    .mail-row-outer:not(.selected):hover .mail-row-card {
+      background: var(--hover-fill);
+    }
+
+    .row-shader-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      display: block;
+    }
+
+    /* Divider modes */
+    .div-minimal .mail-list-pane {
+      border-right: 1px solid var(--line-soft);
+    }
+    .div-zero .mail-list-pane {
+      border-right: none;
+      background: var(--paper-subtle);
+    }
+    .div-zero .reading-pane {
+      background: var(--paper);
+      box-shadow: -8px 0 24px -14px rgba(15, 23, 42, 0.04);
+    }
+
+    /* Fluid selection modes */
+    .mode-air .mail-row-outer.selected .mail-row-card {
+      box-shadow: 0 4px 16px -4px rgba(110, 82, 210, 0.10);
+    }
+    [data-theme="dark"] .mode-air .mail-row-outer.selected .mail-row-card {
+      box-shadow: 0 8px 22px -6px rgba(0, 0, 0, 0.45);
+    }
+
+    .mode-fullsilk .mail-row-outer.selected .mail-row-card {
+      box-shadow: 0 10px 26px -6px rgba(142, 96, 246, 0.32);
+    }
+    .mode-fullsilk .mail-row-outer.selected .sender,
+    .mode-fullsilk .mail-row-outer.selected .r-line2 {
+      color: #141122 !important;
+      font-weight: 600;
+    }
+    .mode-fullsilk .mail-row-outer.selected .acct-tag,
+    .mode-fullsilk .mail-row-outer.selected .r-time,
+    .mode-fullsilk .mail-row-outer.selected .preview {
+      color: rgba(20, 17, 34, 0.68) !important;
+    }
+    .mode-fullsilk .mail-row-outer.selected .conf-pill {
+      background: rgba(20, 17, 34, 0.12) !important;
+      color: #141122 !important;
+    }
+
+    .mode-pill .mail-row-outer.selected .mail-row-card {
+      background: var(--pill-surface);
+      padding-left: 18px;
+    }
+    .mode-pill .mail-row-outer.selected .row-shader-canvas {
+      left: 5px;
+      top: 9px;
+      bottom: 9px;
+      width: 4.5px;
+      height: calc(100% - 18px);
+      border-radius: 99px;
+      box-shadow: 0 0 12px rgba(168, 120, 252, 0.45);
+    }
+
+    .row-content {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      gap: 3.5px;
+    }
+
+    .r-line1 {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .sender {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sender.read {
+      font-weight: 500;
+      color: var(--ink2);
+    }
+    .acct-tag {
+      font-size: 11px;
+      color: var(--ink3);
+      flex-shrink: 0;
+    }
+    .r-time {
+      margin-left: auto;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 11px;
+      color: var(--ink3);
+    }
+
+    .r-line2 {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .r-line2.read {
+      font-weight: 400;
+      color: var(--ink2);
+    }
+
+    .r-line3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .preview {
+      font-size: 12px;
+      color: var(--ink3);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+    .conf-pill {
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--amber);
+      background: rgba(184, 110, 20, 0.10);
+      padding: 1px 5.5px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    /* Right Reading Pane */
+    .reading-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--paper);
+      position: relative;
+      z-index: 1;
+      transition: background 0.15s ease;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--ink2);
+    }
+    .tb-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+    .tb-btn:hover {
+      background: var(--hover-fill);
+    }
+
+    .article {
+      padding: 20px 36px 28px;
+      max-width: 720px;
+    }
+    .art-subj {
+      font-size: 19px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.38;
+      letter-spacing: -0.012em;
+      margin-bottom: 14px;
+    }
+    .art-meta {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding-bottom: 4px;
+    }
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(59, 99, 230, 0.10);
+      color: var(--cobalt);
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .ai-strip {
+      margin-top: 16px;
+      background: var(--sunken);
+      border-radius: 10px;
+      padding: 12px 14px;
+      transition: background 0.15s ease;
+    }
+    .ai-strip-top {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      margin-bottom: 9px;
+    }
+    .quote-box {
+      background: var(--paper);
+      border-left: 2.5px solid var(--amber);
+      border-radius: 6px;
+      padding: 7.5px 11px;
+      font-size: 12px;
+      color: var(--ink2);
+      margin-bottom: 9px;
+    }
+    .guard-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .g-pill {
+      font-size: 11px;
+      color: var(--ink2);
+      background: var(--paper);
+      border-radius: 6px;
+      padding: 3.5px 8.5px;
+    }
+    .art-body {
+      margin-top: 24px;
+      font-size: 13.5px;
+      line-height: 1.78;
+      color: var(--ink2);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .hint-footer {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--ink3);
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+  </style>
+</head>
+<body data-bg="pure">
+
+  <!-- Top Interactive Control Panel -->
+  <div class="lab-bar">
+    <div class="lab-row">
+      <div class="lab-group">
+        <span class="lab-label">浅色背景底色（告别泛黄暖灰）</span>
+        <div class="seg" id="bgSeg">
+          <button data-bg="pure" class="active">A · 极净冷雪白（#FAFBFD 侧栏 + #FFFFFF 纸面）</button>
+          <button data-bg="titanium">B · Linear 冷钛银灰（#F3F5F9 冷色温）</button>
+          <button data-bg="glacial">C · 清冽冷雾石板（#EEF2F6 高反差冷底）</button>
+          <button data-bg="warm-legacy">对照 · 原版暖灰底（#F3F2EE 泛黄米灰）</button>
+        </div>
+      </div>
+
+      <div class="lab-group">
+        <span class="lab-label">主题</span>
+        <div class="seg" id="themeSeg">
+          <button data-theme="light" class="active">浅色</button>
+          <button data-theme="dark">深色</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="lab-row">
+      <div class="lab-group">
+        <span class="lab-label">分割线</span>
+        <div class="seg" id="divSeg">
+          <button data-div="minimal" class="active">极简留白</button>
+          <button data-div="zero">彻底零线条</button>
+        </div>
+
+        <span class="lab-label" style="margin-left:6px;">选中高亮（以后可做 Theme）</span>
+        <div class="seg" id="paletteSeg">
+          <button data-pal="0" class="active">紫杏晨光（原图同款）</button>
+          <button data-pal="1">鸢尾冰蓝</button>
+          <button data-pal="2">暖桃暮金</button>
+        </div>
+
+        <div class="seg" id="modeSeg">
+          <button data-mode="air" class="active">无框空气晕染</button>
+          <button data-mode="fullsilk">100% 满色卡</button>
+          <button data-mode="pill">侧翼光刃</button>
+        </div>
+      </div>
+
+      <div class="swatch-preview" title="右上角展示 100% 原始浓度的实时 Shader 纹理">
+        <div class="raw-shader-thumb">
+          <canvas id="thumbCanvas" width="96" height="96"></canvas>
+        </div>
+        <div style="font-size:11px; line-height:1.35; color:var(--ink3);">
+          <div style="color:var(--ink2); font-weight:600;">原图 1:1 丝绸源</div>
+          <div>超低频 + 像素颗粒</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Offscreen Retina WebGL Canvases -->
+  <canvas id="glFullCanvas" width="680" height="180" style="display:none"></canvas>
+
+  <!-- Simulated Native macOS Mailroom Window -->
+  <div class="mac-window mode-air div-minimal" id="appWindow">
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      <div class="traffic-lights">
+        <span class="tl r"></span><span class="tl y"></span><span class="tl g"></span>
+      </div>
+      <div class="brand-row">
+        <div class="brand-icon">
+          <canvas id="logoCanvas" width="44" height="44"></canvas>
+        </div>
+        <span class="brand-title">Mailroom</span>
+      </div>
+
+      <div class="acct-strip">
+        <div class="acct-pill on">全部</div>
+        <div class="acct-pill"><span class="dot" style="background:var(--sage)"></span>Google</div>
+        <div class="acct-pill"><span class="dot" style="background:var(--cobalt)"></span>163</div>
+      </div>
+
+      <div class="search-box">
+        <span>⌕ 搜索与命令</span>
+        <span class="kbd">⌘K</span>
+      </div>
+
+      <div class="sec-title">待你拍板</div>
+      <div class="nav-item active">
+        <span style="display:inline-flex;align-items:center;gap:7px;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.5 9.5L4 3.5h8l1.5 6v3h-11v-3z"/><path d="M2.5 9.5h3.2a2.3 2.3 0 0 0 4.6 0h3.2"/></svg>
+          全部待处理
+        </span>
+        <span class="nav-count">6</span>
+      </div>
+      <div class="nav-item">
+        <span style="display:inline-flex;align-items:center;gap:7px;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="5.2" r="2.6"/><path d="M3.2 13.2c.6-2.4 2.4-3.6 4.8-3.6s4.2 1.2 4.8 3.6"/></svg>
+          真人来信
+        </span>
+        <span class="nav-count">2</span>
+      </div>
+      <div class="nav-item">
+        <span style="display:inline-flex;align-items:center;gap:7px;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3.5" y="2.2" width="9" height="11.6" rx="1.4"/><path d="M5.8 5.8h4.4M5.8 8.4h4.4M5.8 11h2.6"/></svg>
+          合同 · 账单 · 条款
+        </span>
+        <span class="nav-count">2</span>
+      </div>
+      <div class="nav-item">
+        <span style="display:inline-flex;align-items:center;gap:7px;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="5.6"/><path d="M6.6 6.4a1.5 1.5 0 1 1 2.2 1.3c-.5.3-.8.6-.8 1.2"/><circle cx="8" cy="11.3" r="0.6" fill="currentColor"/></svg>
+          待你拍板
+        </span>
+        <span class="nav-count">2</span>
+      </div>
+
+      <div class="sec-title" style="margin-top:12px;">已替你挡下</div>
+      <div class="nav-item">
+        <span style="display:inline-flex;align-items:center;gap:7px;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2.2" y="3" width="11.6" height="2.6" rx="0.7"/><path d="M3.2 5.6v6.8a1 1 0 0 0 1 1h7.6a1 1 0 0 0 1-1V5.6M6.4 8.5h3.2"/></svg>
+          自动归档
+        </span>
+        <span class="nav-count">24</span>
+      </div>
+      <div class="nav-item">
+        <span style="display:inline-flex;align-items:center;gap:7px;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 4.5h10M6.2 4.5V3.2h3.6v1.3M4.4 4.5l.6 8.3a1 1 0 0 0 1 .9h4a1 1 0 0 0 1-.9l.6-8.3"/></svg>
+          推广与杂讯
+        </span>
+        <span class="nav-count">18</span>
+      </div>
+    </aside>
+
+    <!-- Right Inset Paper Card -->
+    <div class="paper-card">
+      <!-- Mail List -->
+      <section class="mail-list-pane">
+        <div class="pane-header">
+          <div class="pane-header-title">
+            <span>全部待处理</span>
+            <span class="cnt">6</span>
+          </div>
+        </div>
+        <div class="rows-scroll" id="rowsContainer"></div>
+      </section>
+
+      <!-- Reading Pane -->
+      <section class="reading-pane">
+        <div class="pane-header">
+          <span id="idxCounter" style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink3);">2 / 6</span>
+          <div class="toolbar-actions">
+            <span class="tb-btn">归档</span>
+            <span class="tb-btn">保留</span>
+            <span class="tb-btn">推广</span>
+            <span class="tb-btn" style="margin-left:4px;">Apple Mail ↗</span>
+          </div>
+        </div>
+
+        <div class="article" id="articlePane"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="hint-footer">
+    <span>💡 点第一排的 <strong>「A 极净冷雪白 / B Linear 冷钛银灰 / C 清冽冷雾石板 / 对照 · 原版暖灰底」</strong>，对比把泛黄的 `#F3F2EE` 暖背景换成干练冷色温底色的效果！</span>
+  </div>
+
+  <script>
+    const MAILS = [
+      {
+        sender: "Clara Zhou · Stripe Legal",
+        addr: "clara.zhou@stripe.com",
+        acct: "Google",
+        time: "10:42",
+        unread: true,
+        kindColor: "var(--cobalt)",
+        subject: "Updated Master Services Agreement — Q4 Renewal",
+        preview: "Please review Section 4.2 regarding revised settlement SLA before Friday.",
+        conf: null,
+        intent: "需要周五前确认合同条款",
+        badge: "合同 · 条款",
+        prob: "94%",
+        quote: "Please review Section 4.2 regarding revised settlement SLA before Friday.",
+        guards: ["同线程你曾参与回复 (4 封往来)", "检测到正式 PDF 附件"],
+        body: [
+          "Hi Naicheng,",
+          "Attached is the clean copy of our Q4 Master Services Agreement renewal. Please review Section 4.2 regarding revised settlement SLA before Friday so we can keep your current enterprise tier active without interruption.",
+          "Let me know if you'd like to hop on a quick 10-minute call tomorrow morning."
+        ]
+      },
+      {
+        sender: "Action needed · Google Cloud",
+        addr: "cloud-noreply@google.com",
+        acct: "Google",
+        time: "09:18",
+        unread: true,
+        kindColor: "var(--amber)",
+        subject: "Confirm your billing profile verification before Nov 20",
+        preview: "To avoid API quota suspension on project mailroom-prod, verify your card.",
+        conf: "74%",
+        intent: "待你核实账单验证",
+        badge: "待你拍板",
+        prob: "74%",
+        quote: "To avoid API quota suspension on project mailroom-prod, verify your primary payment method.",
+        guards: ["低确信度保留至待拍板", "包含账单风控关键词"],
+        body: [
+          "Hello,",
+          "We noticed a routine verification requirement on your Google Cloud billing profile linked to mailroom-prod.",
+          "To avoid API quota suspension on project mailroom-prod, verify your primary payment method in the Cloud Console prior to November 20."
+        ]
+      },
+      {
+        sender: "Linus Shen",
+        addr: "linus@foundry.design",
+        acct: "iCloud",
+        time: "昨天",
+        unread: false,
+        kindColor: "var(--cobalt)",
+        subject: "Re: 周四下午喝杯咖啡聊聊桌面端交互？",
+        preview: "太好了，那就定在周四下午三点静安寺旁边的 %Arabica，我带最新的...",
+        conf: null,
+        intent: "真人日程邀约",
+        badge: "真人来信",
+        prob: "97%",
+        quote: "那就定在周四下午三点静安寺旁边的 %Arabica",
+        guards: ["同线程你曾参与回复 (3 封往来)", "重要星标线程保护"],
+        body: [
+          "太好了，那就定在周四下午三点静安寺旁边的 %Arabica，我带最新的桌面端原型过去给你看一眼。",
+          "如果临时改时间随时微信喊我就行！"
+        ]
+      },
+      {
+        sender: "Substack",
+        addr: "no-reply@substack.com",
+        acct: "Google",
+        time: "昨天",
+        unread: false,
+        kindColor: "var(--amber)",
+        subject: "Your Substack digest, plus new notes from writers you follow",
+        preview: "Then, be bold. “A lot of people are writing thoughtful essays on interface...",
+        conf: "58%",
+        intent: "正文待核实",
+        badge: "待你拍板",
+        prob: "58%",
+        quote: "A lot of people are writing thoughtful essays on interface craft this week.",
+        guards: ["低确信度保留至待拍板", "外部远程图片默认拦截"],
+        body: [
+          "Here is what writers in your network published today.",
+          "A lot of people are writing thoughtful essays on interface craft this week — tap through if you'd like to keep receiving weekly digests."
+        ]
+      },
+      {
+        sender: "Figma Billing",
+        addr: "receipts@figma.com",
+        acct: "Exchange",
+        time: "周二",
+        unread: false,
+        kindColor: "var(--sage)",
+        subject: "Invoice #INV-2026-8841 for Design Seat Renewal ($45.00)",
+        preview: "Your monthly receipt for Organization workspace is attached as a PDF.",
+        conf: null,
+        intent: "月度账单凭证留存",
+        badge: "账单 · 收据",
+        prob: "92%",
+        quote: "Your monthly receipt for Organization workspace is attached as a PDF.",
+        guards: ["检测到正式 PDF 附件"],
+        body: [
+          "Thank you for using Figma.",
+          "Your monthly receipt for Organization workspace ($45.00 USD) has been paid automatically and is attached as a PDF for reimbursement."
+        ]
+      },
+      {
+        sender: "AMD AI Developer Program",
+        addr: "dev@amd.com",
+        acct: "Google",
+        time: "周一",
+        unread: false,
+        kindColor: "var(--amber)",
+        subject: "ROCm 7 Early Access invitation for registered hardware partners",
+        preview: "Want to be featured or request remote MI350 test cluster credits?",
+        conf: "63%",
+        intent: "开发者测试额度邀请",
+        badge: "待你拍板",
+        prob: "63%",
+        quote: "Want to be featured or request remote MI350 test cluster credits?",
+        guards: ["低确信度保留至待拍板"],
+        body: [
+          "Hi Developer,",
+          "Applications for our remote MI350 test cluster credits are open through the end of this month."
+        ]
+      }
+    ];
+
+    // Keep the user's favorite fluid selection highlight (palette 0: 紫杏晨光 + air mode)
+    // while letting them switch the Light Mode background surface!
+    let state = {
+      selectedIdx: 1,
+      bgPreset: "pure",   // pure | titanium | glacial | warm-legacy
+      divMode: "minimal", // minimal | zero
+      mode: "air",        // air | fullsilk | pill
+      palette: 0,         // 0 = 紫杏晨光 (Original reference)
+      motion: "breathe",
+      theme: "light"
+    };
+
+    const glCanvas = document.getElementById("glFullCanvas");
+    const gl = glCanvas.getContext("webgl", { antialias: true, preserveDrawingBuffer: true });
+
+    const thumbCanvas = document.getElementById("thumbCanvas");
+    const thumbCtx = thumbCanvas.getContext("2d");
+    const logoCanvas = document.getElementById("logoCanvas");
+    const logoCtx = logoCanvas.getContext("2d");
+
+    const vsSource = `
+      attribute vec2 a_pos;
+      varying vec2 v_uv;
+      void main() {
+        v_uv = a_pos * 0.5 + 0.5;
+        gl_Position = vec4(a_pos, 0.0, 1.0);
+      }
+    `;
+
+    const fsSource = `
+      precision highp float;
+      varying vec2 v_uv;
+      uniform float u_time;
+      uniform int u_palette;
+      uniform int u_surfaceMode; // 0 = 100% Full Silk, 1 = Light Air Tint, 2 = Dark Velvet Glow
+
+      float hash(vec2 p) {
+        vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+        p3 += dot(p3, p3.yzx + 33.33);
+        return fract((p3.x + p3.y) * p3.z);
+      }
+
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+        return mix(
+          mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+          mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+          u.y
+        );
+      }
+
+      float silkWave(vec2 p) {
+        float v = 0.65 * noise(p);
+        mat2 rot = mat2(0.84, -0.54, 0.54, 0.84);
+        v += 0.35 * noise(rot * p * 1.65 + vec2(2.3, 4.1));
+        return v;
+      }
+
+      void main() {
+        vec2 uv = v_uv;
+        float t = u_time * 0.28;
+
+        float w1 = silkWave(uv * vec2(1.15, 0.95) + vec2(t * 0.25, -t * 0.18));
+        float w2 = silkWave(uv * vec2(1.35, 1.10) + vec2(w1 * 0.55 - t * 0.15, w1 * 0.45 + t * 0.20));
+
+        float leftMist = smoothstep(0.68, 0.02, uv.x * 0.82 + uv.y * 0.28 - (w2 - 0.5) * 0.38);
+        float centerSilk = smoothstep(0.18, 0.85, w2 + (uv.x - uv.y) * 0.18);
+
+        vec2 warmCenter = vec2(0.84 + sin(t * 0.7) * 0.04, 0.14 + cos(t * 0.6) * 0.04);
+        vec2 dWarm = (uv - warmCenter) * vec2(1.15, 1.35);
+        float warmDist = length(dWarm) - (w1 - 0.5) * 0.28;
+        float warmBloom = smoothstep(0.68, 0.04, warmDist);
+
+        float topRightRim = smoothstep(0.42, 0.98, uv.x * 0.62 + uv.y * 0.52 + (w1 - 0.5) * 0.22) * (1.0 - warmBloom * 0.6);
+
+        vec3 cCore, cDeep, cMist, cWarm, cRim;
+
+        if (u_surfaceMode == 0) {
+          if (u_palette == 0) {
+            cCore = vec3(0.710, 0.533, 0.988);
+            cDeep = vec3(0.620, 0.435, 0.965);
+            cMist = vec3(0.865, 0.765, 0.992);
+            cWarm = vec3(0.965, 0.690, 0.435);
+            cRim  = vec3(0.925, 0.780, 0.885);
+          } else if (u_palette == 1) {
+            cCore = vec3(0.545, 0.655, 0.992);
+            cDeep = vec3(0.410, 0.510, 0.965);
+            cMist = vec3(0.835, 0.885, 0.996);
+            cWarm = vec3(0.680, 0.905, 0.992);
+            cRim  = vec3(0.855, 0.815, 0.995);
+          } else {
+            cCore = vec3(0.955, 0.645, 0.715);
+            cDeep = vec3(0.825, 0.510, 0.895);
+            cMist = vec3(0.990, 0.855, 0.835);
+            cWarm = vec3(0.985, 0.760, 0.455);
+            cRim  = vec3(0.992, 0.880, 0.790);
+          }
+        } else if (u_surfaceMode == 1) {
+          if (u_palette == 0) {
+            cCore = vec3(0.938, 0.910, 0.996);
+            cDeep = vec3(0.905, 0.865, 0.992);
+            cMist = vec3(0.972, 0.960, 0.998);
+            cWarm = vec3(0.994, 0.902, 0.820);
+            cRim  = vec3(0.975, 0.925, 0.965);
+          } else if (u_palette == 1) {
+            cCore = vec3(0.918, 0.945, 0.998);
+            cDeep = vec3(0.875, 0.912, 0.995);
+            cMist = vec3(0.968, 0.978, 0.999);
+            cWarm = vec3(0.885, 0.965, 0.998);
+            cRim  = vec3(0.945, 0.935, 0.998);
+          } else {
+            cCore = vec3(0.988, 0.918, 0.935);
+            cDeep = vec3(0.955, 0.885, 0.975);
+            cMist = vec3(0.994, 0.968, 0.965);
+            cWarm = vec3(0.996, 0.918, 0.825);
+            cRim  = vec3(0.995, 0.948, 0.910);
+          }
+        } else {
+          if (u_palette == 0) {
+            cCore = vec3(0.185, 0.148, 0.295);
+            cDeep = vec3(0.135, 0.118, 0.215);
+            cMist = vec3(0.155, 0.138, 0.240);
+            cWarm = vec3(0.355, 0.215, 0.195);
+            cRim  = vec3(0.245, 0.175, 0.315);
+          } else if (u_palette == 1) {
+            cCore = vec3(0.140, 0.185, 0.315);
+            cDeep = vec3(0.110, 0.135, 0.220);
+            cMist = vec3(0.125, 0.152, 0.245);
+            cWarm = vec3(0.165, 0.275, 0.365);
+            cRim  = vec3(0.185, 0.215, 0.340);
+          } else {
+            cCore = vec3(0.265, 0.155, 0.235);
+            cDeep = vec3(0.175, 0.120, 0.205);
+            cMist = vec3(0.195, 0.135, 0.215);
+            cWarm = vec3(0.365, 0.225, 0.165);
+            cRim  = vec3(0.295, 0.185, 0.245);
+          }
+        }
+
+        vec3 col = mix(cDeep, cCore, centerSilk);
+        col = mix(col, cMist, leftMist * 0.75);
+        col = mix(col, cRim, topRightRim * 0.55);
+        col = mix(col, cWarm, pow(warmBloom, 1.35) * 0.92);
+
+        float grainStrength = (u_surfaceMode == 1) ? 0.012 : 0.022;
+        float grain = (hash(gl_FragCoord.xy + fract(t) * 100.0) - 0.5) * grainStrength;
+        col = clamp(col + grain, 0.0, 1.0);
+
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `;
+
+    function compileShader(type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      return s;
+    }
+
+    const prog = gl.createProgram();
+    gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, vsSource));
+    gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, fsSource));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+    const aPos = gl.getAttribLocation(prog, "a_pos");
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+    const uTime = gl.getUniformLocation(prog, "u_time");
+    const uPalette = gl.getUniformLocation(prog, "u_palette");
+    const uSurfaceMode = gl.getUniformLocation(prog, "u_surfaceMode");
+
+    let activeRowCanvas = null;
+
+    function renderRows() {
+      const container = document.getElementById("rowsContainer");
+      container.innerHTML = "";
+      activeRowCanvas = null;
+
+      MAILS.forEach((m, idx) => {
+        const selected = idx === state.selectedIdx;
+        const outer = document.createElement("div");
+        outer.className = "mail-row-outer" + (selected ? " selected" : "");
+        outer.onclick = () => {
+          state.selectedIdx = idx;
+          renderRows();
+          renderArticle();
+          drawShaderFrame((performance.now() - startTs) / 1000.0);
+        };
+
+        outer.innerHTML = `
+          <div class="mail-row-card">
+            ${selected ? `<canvas class="row-shader-canvas" width="680" height="180"></canvas>` : ""}
+            <div class="row-content">
+              <div class="r-line1">
+                <span class="status-dot" style="background:${m.unread ? 'var(--cobalt)' : m.kindColor}; opacity:${m.unread ? 1 : 0.45}"></span>
+                <span class="sender ${m.unread ? '' : 'read'}">${m.sender}</span>
+                <span class="acct-tag">· ${m.acct}</span>
+                <span class="r-time">${m.time}</span>
+              </div>
+              <div class="r-line2 ${m.unread ? '' : 'read'}">${m.subject}</div>
+              <div class="r-line3">
+                <span class="preview">${m.preview}</span>
+              </div>
+            </div>
+          </div>
+        `;
+        if (selected) {
+          activeRowCanvas = outer.querySelector(".row-shader-canvas");
+        }
+        container.appendChild(outer);
+      });
+    }
+
+    function renderArticle() {
+      const m = MAILS[state.selectedIdx];
+      document.getElementById("idxCounter").textContent = `${state.selectedIdx + 1} / ${MAILS.length}`;
+      const pane = document.getElementById("articlePane");
+      pane.innerHTML = `
+        <div class="art-subj">${m.subject}</div>
+        <div class="art-meta">
+          <div class="avatar">${m.sender[0]}</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:baseline;gap:6px;">
+              <span style="font-size:13px;font-weight:600;color:var(--ink)">${m.sender}</span>
+              <span style="font-size:12px;color:var(--ink3)">&lt;${m.addr}&gt;</span>
+              <span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink3)">${m.time}</span>
+            </div>
+            <div style="font-size:12px;color:var(--ink3);margin-top:3px;">
+              发至 <span style="color:var(--ink2)">${m.acct}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="art-body">
+          ${m.body.map(p => `<p>${p}</p>`).join("")}
+        </div>
+      `;
+    }
+
+    function drawShaderFrame(tSec) {
+      gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+      gl.uniform1f(uTime, tSec);
+      gl.uniform1i(uPalette, state.palette);
+
+      gl.uniform1i(uSurfaceMode, 0);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      thumbCtx.drawImage(glCanvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
+      logoCtx.drawImage(glCanvas, 0, 0, logoCanvas.width, logoCanvas.height);
+
+      if (!activeRowCanvas) return;
+      const rowCtx = activeRowCanvas.getContext("2d");
+
+      if (state.mode === "air") {
+        const surfMode = state.theme === "light" ? 1 : 2;
+        gl.uniform1i(uSurfaceMode, surfMode);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      }
+      rowCtx.drawImage(glCanvas, 0, 0, activeRowCanvas.width, activeRowCanvas.height);
+    }
+
+    function syncWindowClasses() {
+      const win = document.getElementById("appWindow");
+      win.className = `mac-window mode-${state.mode} div-${state.divMode}`;
+      document.body.setAttribute("data-bg", state.bgPreset);
+    }
+
+    let startTs = performance.now();
+    function tick(now) {
+      if (state.motion === "breathe") {
+        drawShaderFrame((now - startTs) / 1000.0);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // Wire up UI controls
+    document.getElementById("bgSeg").addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      document.querySelectorAll("#bgSeg button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.bgPreset = btn.dataset.bg;
+      syncWindowClasses();
+    });
+
+    document.getElementById("divSeg").addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      document.querySelectorAll("#divSeg button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.divMode = btn.dataset.div;
+      syncWindowClasses();
+    });
+
+    document.getElementById("modeSeg").addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      document.querySelectorAll("#modeSeg button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.mode = btn.dataset.mode;
+      syncWindowClasses();
+      drawShaderFrame((performance.now() - startTs) / 1000.0);
+    });
+
+    document.getElementById("paletteSeg").addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      document.querySelectorAll("#paletteSeg button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.palette = parseInt(btn.dataset.pal, 10);
+      drawShaderFrame((performance.now() - startTs) / 1000.0);
+    });
+
+    document.getElementById("themeSeg").addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      document.querySelectorAll("#themeSeg button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.theme = btn.dataset.theme;
+      if (state.theme === "dark") {
+        document.documentElement.setAttribute("data-theme", "dark");
+      } else {
+        document.documentElement.removeAttribute("data-theme");
+      }
+      drawShaderFrame((performance.now() - startTs) / 1000.0);
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "j" || e.key === "ArrowDown") {
+        e.preventDefault();
+        state.selectedIdx = Math.min(MAILS.length - 1, state.selectedIdx + 1);
+        renderRows();
+        renderArticle();
+        drawShaderFrame((performance.now() - startTs) / 1000.0);
+      } else if (e.key === "k" || e.key === "ArrowUp") {
+        e.preventDefault();
+        state.selectedIdx = Math.max(0, state.selectedIdx - 1);
+        renderRows();
+        renderArticle();
+        drawShaderFrame((performance.now() - startTs) / 1000.0);
+      }
+    });
+
+    // Initial render
+    renderRows();
+    renderArticle();
+    syncWindowClasses();
+    drawShaderFrame(1.8);
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

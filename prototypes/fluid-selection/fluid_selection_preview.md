@@ -1,0 +1,16 @@
+# 流体艺术选中态视觉实验（替代左侧蓝条）
+
+将你截图中的 **丁香紫 × 鸢尾折痕 × 右下暖杏金（Domain-Warped Fluid + 微颗粒）** 用实时着色器合成后，作为邮件列表与侧栏的「微光选中态」对比预览：
+
+````carousel
+![方案 A（浅色）· 左净右润丝绸悬浮卡：左侧文字区保持清透高对比度，右侧与右下角自然晕开紫杏晨光，配 1px 微光内描边](/Users/nd/.gemini/antigravity-cli/brain/916460e0-11cd-466b-9079-7d46f346e0d8/fluid_select_light_asymmetric.png)
+<!-- slide -->
+![方案 B（浅色）· 整行均匀柔雾卡：15% 均匀流体底纹满铺圆角卡片，整体偏柔和丁香紫雾感](/Users/nd/.gemini/antigravity-cli/brain/916460e0-11cd-466b-9079-7d46f346e0d8/fluid_select_light_uniform.png)
+<!-- slide -->
+![方案 A（深色）· 背光亚克力质感：暗黑纸面下透出克制的紫珀微光，比传统灰蓝选中条更有呼吸感](/Users/nd/.gemini/antigravity-cli/brain/916460e0-11cd-466b-9079-7d46f346e0d8/fluid_select_dark.png)
+````
+
+> [!TIP]
+> **视觉观察小结**
+> - **方案 A（左净右润圆角卡）** 兼顾了「OpenAI 艺术辨识度」和「三行密集文字清晰度」：左边发件人与标题依然像印在白纸上一样锐利，而右下角渗出的那一抹紫杏暖光刚好避开了核心阅读视线，又比一根冷冰冰的蓝竖条温润得多。
+> - 左上角 `22pt` Logo 方块与左侧栏当前文件夹（「全部待处理」）同步呼应同一套流体纹理时，三栏的气质非常统一。
