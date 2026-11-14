@@ -96,10 +96,7 @@ jobs:
           security find-identity -v -p codesigning "$KEYCHAIN_PATH"
           rm -f "$CERT_PATH"
 
-          {
-            echo "RUNNER_KEYCHAIN_PATH=$KEYCHAIN_PATH"
-            echo "RUNNER_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD"
-          } >> "$GITHUB_ENV"
+          echo "RUNNER_KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
 
       - name: Store Notarytool Credentials
         run: ./scripts/setup-notarytool-profile.sh
