@@ -132,6 +132,9 @@ struct RootDeckView: View {
             .overlay(alignment: .topLeading) {
                 peekSidebarOverlay
             }
+            .blur(radius: vm.paletteOpen ? 5 : 0)
+            .allowsHitTesting(!vm.paletteOpen)
+            .animation(.easeOut(duration: 0.16), value: vm.paletteOpen)
 
             if let noticeURL = vm.nativeNoticeURL {
                 NativeNoticeBanner(url: noticeURL)

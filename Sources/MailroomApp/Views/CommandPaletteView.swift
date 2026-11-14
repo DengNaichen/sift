@@ -22,11 +22,16 @@ struct CommandPaletteView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            Color.black.opacity(p.mode == .dark ? 0.26 : 0.08)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    onClose()
-                }
+            ZStack {
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .opacity(0.32)
+                Color.black.opacity(p.mode == .dark ? 0.36 : 0.13)
+            }
+            .ignoresSafeArea()
+            .onTapGesture {
+                onClose()
+            }
 
             VStack(spacing: 0) {
                 HStack(spacing: 10) {
@@ -48,7 +53,7 @@ struct CommandPaletteView: View {
                 .padding(.horizontal, 16)
                 .frame(height: 50)
                 .overlay(alignment: .bottom) {
-                    Rectangle().fill(p.ink.opacity(0.08)).frame(height: 1)
+                    Rectangle().fill(p.lineStrong).frame(height: 1)
                 }
 
                 ScrollViewReader { proxy in
@@ -108,7 +113,7 @@ struct CommandPaletteView: View {
                                         .padding(.vertical, 7)
                                         .background(
                                             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                                .fill(idx == activeIndex ? p.ink.opacity(p.mode == .dark ? 0.12 : 0.07) : Color.clear)
+                                                .fill(idx == activeIndex ? p.sunken : Color.clear)
                                         )
                                         .contentShape(Rectangle())
                                     }
@@ -129,8 +134,16 @@ struct CommandPaletteView: View {
                 }
             }
             .frame(width: 600)
-            .deckGlassRect(cornerRadius: 16)
-            .shadow(color: .black.opacity(p.mode == .dark ? 0.30 : 0.10), radius: 26, y: 12)
+            .background(p.raised, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .strokeBorder(
+                        p.mode == .dark ? Color.white.opacity(0.11) : Color.black.opacity(0.08),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: .black.opacity(p.mode == .dark ? 0.52 : 0.16), radius: 32, y: 14)
+            .shadow(color: .black.opacity(p.mode == .dark ? 0.26 : 0.05), radius: 4, y: 1)
             .padding(.top, 92)
             .onKeyPress(.downArrow) {
                 activeIndex = min(max(0, filtered.count - 1), activeIndex + 1)

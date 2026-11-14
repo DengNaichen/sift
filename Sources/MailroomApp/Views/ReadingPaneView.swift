@@ -51,7 +51,7 @@ struct ReadingPaneView: View {
     }
 
     private var bottomHUDProbeSurfaceMode: ThemeMode {
-        let probeX = min(max(80, paneSize.width * 0.5), 408)
+        let probeX = max(80, paneSize.width * 0.5)
         let probeY = max(24, paneSize.height - 30)
         return surfaceMode(at: CGPoint(x: probeX, y: probeY))
     }
@@ -96,6 +96,7 @@ struct ReadingPaneView: View {
                                                 }
                                             }
                                         )
+                                        .frame(maxWidth: .infinity)
                                         .frame(height: max(120, webContentHeight))
                                         .onGeometryChange(for: CGRect.self) { geo in
                                             geo.frame(in: .named("reading-pane"))
@@ -105,16 +106,15 @@ struct ReadingPaneView: View {
                                         .padding(.horizontal, 32)
                                         .padding(.top, 20)
                                         .padding(.bottom, 108)
-                                        .frame(maxWidth: 784, alignment: .leading)
                                     } else {
                                         PlainTextBodyView(text: content.plainText)
                                             .padding(.horizontal, 32)
                                             .padding(.top, 22)
                                             .padding(.bottom, 108)
-                                            .frame(maxWidth: 784, alignment: .leading)
                                     }
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(maxWidth: 784, alignment: .leading)
+                                .frame(maxWidth: .infinity, alignment: .center)
                                 .borderlessScroller()
                             }
                             .onChange(of: content.id) { _, _ in
@@ -285,7 +285,6 @@ struct ReadingPaneView: View {
         .background(p.sunken, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
         .padding(.horizontal, 32)
         .padding(.top, 14)
-        .frame(maxWidth: 784, alignment: .leading)
     }
 
     private func remoteImagePrivacyBar(for messageId: MessageId) -> some View {
@@ -319,7 +318,6 @@ struct ReadingPaneView: View {
         .background(p.sunken, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
         .padding(.horizontal, 32)
         .padding(.top, 14)
-        .frame(maxWidth: 784, alignment: .leading)
     }
 
     private func articleHeader(content: MailContent) -> some View {
@@ -414,7 +412,6 @@ struct ReadingPaneView: View {
         .padding(.horizontal, 32)
         .padding(.top, 56)
         .padding(.bottom, 6)
-        .frame(maxWidth: 784, alignment: .leading)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -456,6 +453,7 @@ private struct PlainTextBodyView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
