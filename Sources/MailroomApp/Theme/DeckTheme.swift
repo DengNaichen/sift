@@ -139,10 +139,15 @@ struct KbdView: View {
         Text(text)
             .font(.system(size: 10.5, weight: .medium, design: isSingleUpperLetter ? .default : .monospaced))
             .monospacedDigit()
-            .foregroundStyle(p.ink3)
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+            .foregroundStyle(p.ink2)
             .padding(.horizontal, 4.5)
             .frame(minWidth: 18, minHeight: 18)
-            .background(p.ink.opacity(0.06), in: RoundedRectangle(cornerRadius: 4.5, style: .continuous))
+            .background(
+                p.ink.opacity(p.mode == .dark ? 0.11 : 0.075),
+                in: RoundedRectangle(cornerRadius: 4.5, style: .continuous)
+            )
     }
 }
 
@@ -664,6 +669,15 @@ extension View {
         } else {
             self
         }
+    }
+
+    /// 让悬浮玻璃同时根据其下方真实背景明暗切换玻璃材质与内部文字调色板（避免深色主题叠在白底 HTML 邮件上发灰看不清）。
+    func adaptiveGlassEnvironment(for surfaceMode: ThemeMode) -> some View {
+        let scheme: ColorScheme = (surfaceMode == .dark) ? .dark : .light
+        let surfacePalette: DeckPalette = (surfaceMode == .dark) ? .dark : .light
+        return self
+            .environment(\.colorScheme, scheme)
+            .environment(\.palette, surfacePalette)
     }
 }
 

@@ -5,12 +5,56 @@ struct ReadingPaneView: View {
     @Environment(\.palette) private var p
     let vm: DeckViewModel
     @State private var webContentHeight: CGFloat = 220
-    @State private var openMailHovered = false
+    @State private var paneSize: CGSize = .zero
+    @State private var htmlCardFrame: CGRect = .zero
+    @State private var resolvedHTMLSurfaceMode: ThemeMode?
     @Namespace private var topGlassNS
     @Namespace private var bottomGlassNS
 
     private var activeRow: FolderRow? { vm.activeRow }
     private var content: MailContent? { activeRow?.content }
+
+    private var isShowingHTMLBody: Bool {
+        guard let html = content?.htmlBody, !html.isEmpty, !vm.preferPlainText else {
+            return false
+        }
+        return true
+    }
+
+    private var effectiveHTMLSurfaceMode: ThemeMode {
+        if let resolvedHTMLSurfaceMode {
+            return resolvedHTMLSurfaceMode
+        }
+        if let html = content?.htmlBody, !html.isEmpty {
+            return MailHTMLWebView.predictedSurfaceMode(rawHTML: html, themeMode: vm.themeMode)
+        }
+        return vm.themeMode
+    }
+
+    private func surfaceMode(at point: CGPoint) -> ThemeMode {
+        guard isShowingHTMLBody,
+              htmlCardFrame.width > 10,
+              htmlCardFrame.height > 10,
+              htmlCardFrame.contains(point) else {
+            return vm.themeMode
+        }
+        return effectiveHTMLSurfaceMode
+    }
+
+    private var topLeadingSurfaceMode: ThemeMode {
+        surfaceMode(at: CGPoint(x: 48, y: 24))
+    }
+
+    private var topTrailingSurfaceMode: ThemeMode {
+        let probeX = max(80, paneSize.width - 130)
+        return surfaceMode(at: CGPoint(x: probeX, y: 24))
+    }
+
+    private var bottomHUDProbeSurfaceMode: ThemeMode {
+        let probeX = min(max(80, paneSize.width * 0.5), 408)
+        let probeY = max(24, paneSize.height - 30)
+        return surfaceMode(at: CGPoint(x: probeX, y: probeY))
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -45,9 +89,19 @@ struct ReadingPaneView: View {
                                             html: html,
                                             allowRemoteImages: vm.allowedRemoteImageIds.contains(content.id),
                                             themeMode: vm.themeMode,
-                                            dynamicHeight: $webContentHeight
+                                            dynamicHeight: $webContentHeight,
+                                            onSurfaceModeResolved: { resolved in
+                                                if resolvedHTMLSurfaceMode != resolved {
+                                                    resolvedHTMLSurfaceMode = resolved
+                                                }
+                                            }
                                         )
                                         .frame(height: max(120, webContentHeight))
+                                        .onGeometryChange(for: CGRect.self) { geo in
+                                            geo.frame(in: .named("reading-pane"))
+                                        } action: { newFrame in
+                                            htmlCardFrame = newFrame
+                                        }
                                         .padding(.horizontal, 32)
                                         .padding(.top, 20)
                                         .padding(.bottom, 108)
@@ -64,10 +118,16 @@ struct ReadingPaneView: View {
                                 .borderlessScroller()
                             }
                             .onChange(of: content.id) { _, _ in
+                                resolvedHTMLSurfaceMode = nil
+                                htmlCardFrame = .zero
                                 vm.hydrateIfNeeded(for: content)
                                 scrollToTop(proxy: proxy)
                             }
+                            .onChange(of: vm.themeMode) { _, _ in
+                                resolvedHTMLSurfaceMode = nil
+                            }
                             .onAppear {
+                                resolvedHTMLSurfaceMode = nil
                                 vm.hydrateIfNeeded(for: content)
                                 scrollToTop(proxy: proxy)
                             }
@@ -81,7 +141,7 @@ struct ReadingPaneView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
-            // 3. 底部悬浮撤销提示与快捷键胶囊 HUD（GlassEffectContainer 水滴聚拢）
+            // 3. 底部悬浮撤销提示与快捷键胶囊 HUD（自动跟随下方背景明暗 + 窄屏单行渐进收缩）
             DeckGlassCluster(spacing: 16) {
                 VStack(spacing: 10) {
                     if let toast = vm.state.toast {
@@ -97,9 +157,18 @@ struct ReadingPaneView: View {
                     }
                 }
             }
+            .adaptiveGlassEnvironment(for: bottomHUDProbeSurfaceMode)
+            .animation(.easeInOut(duration: 0.18), value: bottomHUDProbeSurfaceMode)
             .animation(.bouncy(duration: 0.34, extraBounce: 0.05), value: vm.state.toast)
             .animation(.snappy(duration: 0.22), value: vm.showKeyboardHUD)
+            .padding(.horizontal, 36)
             .padding(.bottom, 14)
+        }
+        .coordinateSpace(name: "reading-pane")
+        .onGeometryChange(for: CGSize.self) { geo in
+            geo.size
+        } action: { newSize in
+            paneSize = newSize
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(p.paper)
@@ -118,98 +187,21 @@ struct ReadingPaneView: View {
     private var floatingTopToolbar: some View {
         HStack(spacing: 8) {
             if let idx = vm.activeIndex {
-                Text("\(idx + 1) / \(vm.visibleRows.count)")
-                    .font(.system(size: 11.5, weight: .medium, design: .monospaced))
-                    .monospacedDigit()
-                    .foregroundStyle(p.ink2)
-                    .padding(.horizontal, 10)
-                    .frame(height: 30)
-                    .deckGlassCapsule()
+                TopCounterGlassPill(index: idx, total: vm.visibleRows.count)
+                    .adaptiveGlassEnvironment(for: topLeadingSurfaceMode)
+                    .animation(.easeInOut(duration: 0.18), value: topLeadingSurfaceMode)
             }
 
             Spacer(minLength: 8)
 
-            DeckGlassCluster(spacing: 8) {
-                HStack(spacing: 7) {
-                    if activeRow != nil || !vm.state.undo.isEmpty {
-                        HStack(spacing: 2) {
-                            if let row = activeRow {
-                                switch row {
-                                case .inbox:
-                                    PaneToolbarButton(title: "归档", systemImage: "archivebox", help: "阅毕归档（Space）") {
-                                        vm.actOnCard(.archive)
-                                    }
-                                    PaneToolbarButton(title: "保留", systemImage: "flag", help: "重要保留（⇧K）") {
-                                        vm.actOnCard(.keep)
-                                    }
-                                    PaneToolbarButton(title: "推广", systemImage: "trash", help: "判为推广并移入废纸篓（⌫）") {
-                                        vm.actOnCard(.trash)
-                                    }
-
-                                case .handled:
-                                    PaneToolbarButton(title: "拉回待处理", systemImage: "arrow.uturn.backward", help: "拉回待处理（R）") {
-                                        vm.rescueFocused()
-                                    }
-
-                                case .kept:
-                                    HStack(spacing: 5) {
-                                        Image(systemName: "flag.fill")
-                                            .font(.system(size: 11))
-                                            .foregroundStyle(p.amber)
-                                        Text("已标旗保留")
-                                            .font(.system(size: 12))
-                                            .foregroundStyle(p.ink2)
-                                    }
-                                    .padding(.horizontal, 8)
-                                    .frame(height: 26)
-                                }
-
-                                Rectangle()
-                                    .fill(p.ink.opacity(0.09))
-                                    .frame(width: 1, height: 12)
-                                    .padding(.horizontal, 2)
-                            }
-
-                            PaneToolbarButton(
-                                title: "撤销",
-                                systemImage: "arrow.uturn.backward",
-                                disabled: vm.state.undo.isEmpty,
-                                help: "撤销上一步（Z）"
-                            ) {
-                                _ = vm.undo()
-                            }
-                        }
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 2)
-                        .frame(minHeight: 30)
-                        .deckGlassCapsule(interactive: true)
-                        .deckGlassID("triage-actions", in: topGlassNS)
-                    }
-
-                    if content != nil {
-                        Button {
-                            vm.openFocusedInNativeMail()
-                        } label: {
-                            HStack(spacing: 4.5) {
-                                Text("Apple Mail")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundStyle(openMailHovered ? p.ink : p.ink2)
-                                Image(systemName: "arrow.up.right")
-                                    .font(.system(size: 10.5, weight: .semibold))
-                                    .foregroundStyle(openMailHovered ? p.ink2 : p.ink3)
-                            }
-                            .padding(.horizontal, 11)
-                            .frame(height: 30)
-                            .contentShape(Capsule())
-                        }
-                        .buttonStyle(.plain)
-                        .onHover { openMailHovered = $0 }
-                        .help("在 Apple Mail 中打开（↵）")
-                        .deckGlassCapsule(interactive: true)
-                        .deckGlassID("open-apple-mail", in: topGlassNS)
-                    }
-                }
-            }
+            TopActionGlassCluster(
+                vm: vm,
+                activeRow: activeRow,
+                hasContent: content != nil,
+                namespace: topGlassNS
+            )
+            .adaptiveGlassEnvironment(for: topTrailingSurfaceMode)
+            .animation(.easeInOut(duration: 0.18), value: topTrailingSurfaceMode)
         }
         .padding(.horizontal, 18)
         .padding(.top, 9)
@@ -467,10 +459,141 @@ private struct PlainTextBodyView: View {
     }
 }
 
+private struct TopCounterGlassPill: View {
+    @Environment(\.palette) private var p
+    let index: Int
+    let total: Int
+
+    var body: some View {
+        Text("\(index + 1) / \(total)")
+            .font(.system(size: 11.5, weight: .medium, design: .monospaced))
+            .monospacedDigit()
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+            .foregroundStyle(p.ink.opacity(0.84))
+            .padding(.horizontal, 10)
+            .frame(height: 30)
+            .deckGlassCapsule()
+    }
+}
+
+private struct TopActionGlassCluster: View {
+    @Environment(\.palette) private var p
+    let vm: DeckViewModel
+    let activeRow: FolderRow?
+    let hasContent: Bool
+    let namespace: Namespace.ID
+    @State private var openMailHovered = false
+
+    var body: some View {
+        DeckGlassCluster(spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                clusterContent(iconOnly: false)
+                clusterContent(iconOnly: true)
+            }
+        }
+    }
+
+    private func clusterContent(iconOnly: Bool) -> some View {
+        HStack(spacing: 7) {
+            if activeRow != nil || !vm.state.undo.isEmpty {
+                HStack(spacing: 2) {
+                    if let row = activeRow {
+                        switch row {
+                        case .inbox:
+                            PaneToolbarButton(title: "归档", systemImage: "archivebox", iconOnly: iconOnly, help: "阅毕归档（Space）") {
+                                vm.actOnCard(.archive)
+                            }
+                            PaneToolbarButton(title: "保留", systemImage: "flag", iconOnly: iconOnly, help: "重要保留（⇧K）") {
+                                vm.actOnCard(.keep)
+                            }
+                            PaneToolbarButton(title: "推广", systemImage: "trash", iconOnly: iconOnly, help: "判为推广并移入废纸篓（⌫）") {
+                                vm.actOnCard(.trash)
+                            }
+
+                        case .handled:
+                            PaneToolbarButton(title: "拉回待处理", systemImage: "arrow.uturn.backward", iconOnly: iconOnly, help: "拉回待处理（R）") {
+                                vm.rescueFocused()
+                            }
+
+                        case .kept:
+                            HStack(spacing: 5) {
+                                Image(systemName: "flag.fill")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(p.amber)
+                                if !iconOnly {
+                                    Text("已标旗保留")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .lineLimit(1)
+                                        .fixedSize(horizontal: true, vertical: false)
+                                        .foregroundStyle(p.ink.opacity(0.86))
+                                }
+                            }
+                            .padding(.horizontal, iconOnly ? 7 : 8)
+                            .frame(height: 26)
+                        }
+
+                        Rectangle()
+                            .fill(p.ink.opacity(p.mode == .dark ? 0.13 : 0.09))
+                            .frame(width: 1, height: 12)
+                            .padding(.horizontal, 2)
+                    }
+
+                    PaneToolbarButton(
+                        title: "撤销",
+                        systemImage: "arrow.uturn.backward",
+                        iconOnly: iconOnly,
+                        disabled: vm.state.undo.isEmpty,
+                        help: "撤销上一步（Z）"
+                    ) {
+                        _ = vm.undo()
+                    }
+                }
+                .fixedSize(horizontal: true, vertical: false)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
+                .frame(minHeight: 30)
+                .deckGlassCapsule(interactive: true)
+                .deckGlassID("triage-actions", in: namespace)
+            }
+
+            if hasContent {
+                Button {
+                    vm.openFocusedInNativeMail()
+                } label: {
+                    HStack(spacing: 4.5) {
+                        if !iconOnly {
+                            Text("Apple Mail")
+                                .font(.system(size: 12, weight: .medium))
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
+                                .foregroundStyle(openMailHovered ? p.ink : p.ink.opacity(0.86))
+                        }
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(size: iconOnly ? 11.5 : 10.5, weight: .semibold))
+                            .foregroundStyle(openMailHovered ? p.ink : p.ink2)
+                    }
+                    .fixedSize(horizontal: true, vertical: false)
+                    .padding(.horizontal, iconOnly ? 9.5 : 11)
+                    .frame(height: 30)
+                    .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .onHover { openMailHovered = $0 }
+                .help("在 Apple Mail 中打开（↵）")
+                .deckGlassCapsule(interactive: true)
+                .deckGlassID("open-apple-mail", in: namespace)
+            }
+        }
+        .fixedSize(horizontal: true, vertical: false)
+    }
+}
+
 private struct PaneToolbarButton: View {
     @Environment(\.palette) private var p
     let title: String
     let systemImage: String
+    var iconOnly: Bool = false
     var active: Bool = false
     var disabled: Bool = false
     let help: String
@@ -482,11 +605,16 @@ private struct PaneToolbarButton: View {
             HStack(spacing: 5) {
                 Image(systemName: systemImage)
                     .font(.system(size: 11.5, weight: .medium))
-                Text(title)
-                    .font(.system(size: 12, weight: active ? .medium : .regular))
+                if !iconOnly {
+                    Text(title)
+                        .font(.system(size: 12, weight: .medium))
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
             }
-            .foregroundStyle((active || (hovered && !disabled)) ? p.ink : p.ink2)
-            .padding(.horizontal, 8.5)
+            .fixedSize(horizontal: true, vertical: false)
+            .foregroundStyle((active || (hovered && !disabled)) ? p.ink : p.ink.opacity(0.86))
+            .padding(.horizontal, iconOnly ? 7.5 : 8.5)
             .frame(height: 26)
             .background {
                 if active {
@@ -494,7 +622,7 @@ private struct PaneToolbarButton: View {
                         .fill(p.ink.opacity(p.mode == .dark ? 0.14 : 0.085))
                 } else if hovered && !disabled {
                     Capsule()
-                        .fill(p.ink.opacity(p.mode == .dark ? 0.10 : 0.055))
+                        .fill(p.ink.opacity(p.mode == .dark ? 0.11 : 0.06))
                 }
             }
             .contentShape(Capsule())

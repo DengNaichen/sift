@@ -9,11 +9,22 @@ public enum DataSourceMode: String, Sendable {
     case demo
 }
 
+public enum HudPriority: Int, Comparable, Sendable {
+    case secondary = 0
+    case navigation = 1
+    case core = 2
+
+    public static func < (lhs: HudPriority, rhs: HudPriority) -> Bool {
+        lhs.rawValue < rhs.rawValue
+    }
+}
+
 public struct HudItem: Identifiable {
     public var id: String { label }
     public let keys: [String]
     public let label: String
     public let disabled: Bool
+    public let priority: HudPriority
     public let action: () -> Void
 }
 
@@ -489,35 +500,34 @@ public final class DeckViewModel {
         }()
 
         var list: [HudItem] = [
-            HudItem(keys: ["J", "K"], label: "切换", disabled: !hasRows) { [weak self] in
+            HudItem(keys: ["J", "K"], label: "切换", disabled: !hasRows, priority: .navigation) { [weak self] in
                 self?.moveFocus(delta: 1)
             }
         ]
         if inboxMode {
-            list.append(HudItem(keys: ["Space"], label: "归档", disabled: !canActInbox) { [weak self] in
+            list.append(HudItem(keys: ["Space"], label: "归档", disabled: !canActInbox, priority: .core) { [weak self] in
                 self?.actOnCard(.archive)
             })
-            list.append(HudItem(keys: ["⇧K"], label: "保留", disabled: !canActInbox) { [weak self] in
+            list.append(HudItem(keys: ["⇧K"], label: "保留", disabled: !canActInbox, priority: .core) { [weak self] in
                 self?.actOnCard(.keep)
             })
-            list.append(HudItem(keys: ["⌫"], label: "推广", disabled: !canActInbox) { [weak self] in
+            list.append(HudItem(keys: ["⌫"], label: "推广", disabled: !canActInbox, priority: .core) { [weak self] in
                 self?.actOnCard(.trash)
             })
         } else if state.folder != .kept {
-            list.append(HudItem(keys: ["R"], label: "拉回待处理", disabled: !canRescue) { [weak self] in
+            list.append(HudItem(keys: ["R"], label: "拉回待处理", disabled: !canRescue, priority: .core) { [weak self] in
                 self?.rescueFocused()
             })
         }
-        list.append(HudItem(keys: ["I"], label: "判据", disabled: activeRow == nil) { [weak self] in
-            self?.toggleAIReasoning()
-        })
-        list.append(HudItem(keys: ["↵"], label: "Mail", disabled: activeRow == nil) { [weak self] in
+        list.append(HudItem(keys: ["↵"], label: "Mail", disabled: activeRow == nil, priority: .secondary) { [weak self] in
             self?.openFocusedInNativeMail()
         })
-        list.append(HudItem(keys: ["Z"], label: "撤销", disabled: state.undo.isEmpty) { [weak self] in
-            _ = self?.undo()
-        })
-        list.append(HudItem(keys: ["⌘K"], label: "命令", disabled: false) { [weak self] in
+        if !state.undo.isEmpty {
+            list.append(HudItem(keys: ["Z"], label: "撤销", disabled: false, priority: .secondary) { [weak self] in
+                _ = self?.undo()
+            })
+        }
+        list.append(HudItem(keys: ["⌘K"], label: "命令", disabled: false, priority: .secondary) { [weak self] in
             self?.paletteOpen = true
         })
         return list

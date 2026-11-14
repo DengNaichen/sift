@@ -80,9 +80,17 @@ struct MailHTMLWebView: NSViewRepresentable {
     let allowRemoteImages: Bool
     let themeMode: ThemeMode
     @Binding var dynamicHeight: CGFloat
+    var onSurfaceModeResolved: ((ThemeMode) -> Void)? = nil
+
+    static func predictedSurfaceMode(rawHTML: String, themeMode: ThemeMode) -> ThemeMode {
+        if themeMode == .dark && Coordinator.usesHardcodedLightSurface(rawHTML) {
+            return .light
+        }
+        return themeMode
+    }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(dynamicHeight: $dynamicHeight)
+        Coordinator(dynamicHeight: $dynamicHeight, onSurfaceModeResolved: onSurfaceModeResolved)
     }
 
     func makeNSView(context: Context) -> PassthroughWKWebView {
@@ -98,6 +106,7 @@ struct MailHTMLWebView: NSViewRepresentable {
         webView.underPageBackgroundColor = .clear
         webView.allowsMagnification = false
         webView.allowsBackForwardNavigationGestures = false
+        webView.appearance = NSAppearance(named: themeMode == .dark ? .darkAqua : .aqua)
 
         let coordinator = context.coordinator
         webView.onWidthChanged = { [weak webView, weak coordinator] in
@@ -117,6 +126,8 @@ struct MailHTMLWebView: NSViewRepresentable {
 
     func updateNSView(_ webView: PassthroughWKWebView, context: Context) {
         context.coordinator.dynamicHeight = $dynamicHeight
+        context.coordinator.onSurfaceModeResolved = onSurfaceModeResolved
+        webView.appearance = NSAppearance(named: themeMode == .dark ? .darkAqua : .aqua)
         context.coordinator.loadIfNeeded(
             in: webView,
             messageId: messageId,
@@ -129,6 +140,7 @@ struct MailHTMLWebView: NSViewRepresentable {
     @MainActor
     final class Coordinator: NSObject, WKNavigationDelegate {
         var dynamicHeight: Binding<CGFloat>
+        var onSurfaceModeResolved: ((ThemeMode) -> Void)?
         private var currentRenderKey: RenderKey?
         private var loadTask: Task<Void, Never>?
         private var remeasureTask: Task<Void, Never>?
@@ -163,8 +175,9 @@ struct MailHTMLWebView: NSViewRepresentable {
         })();
         """
 
-        init(dynamicHeight: Binding<CGFloat>) {
+        init(dynamicHeight: Binding<CGFloat>, onSurfaceModeResolved: ((ThemeMode) -> Void)?) {
             self.dynamicHeight = dynamicHeight
+            self.onSurfaceModeResolved = onSurfaceModeResolved
         }
 
         deinit {
@@ -249,6 +262,7 @@ struct MailHTMLWebView: NSViewRepresentable {
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             measureContentHeight(in: webView)
+            measureSurfaceLuminance(in: webView)
 
             let shouldRemeasureForImages = currentRenderKey?.allowRemoteImages ?? false
             remeasureTask?.cancel()
@@ -260,6 +274,63 @@ struct MailHTMLWebView: NSViewRepresentable {
                     try? await Task.sleep(nanoseconds: delay)
                     guard !Task.isCancelled, let self, let webView else { return }
                     self.measureContentHeight(in: webView)
+                }
+            }
+        }
+
+        func measureSurfaceLuminance(in webView: WKWebView) {
+            let isDarkTheme = (currentRenderKey?.themeMode == .dark)
+            let baseRGB = isDarkTheme ? "[22, 23, 27]" : "[255, 255, 255]"
+            let js = """
+            (function() {
+              function parseRGBA(str) {
+                if (!str || str === 'transparent') return null;
+                var m = str.match(/rgba?\\(\\s*([\\d.]+)\\s*,\\s*([\\d.]+)\\s*,\\s*([\\d.]+)(?:\\s*,\\s*([\\d.]+))?\\s*\\)/i);
+                if (!m) return null;
+                var a = (m[4] === undefined) ? 1.0 : parseFloat(m[4]);
+                if (a <= 0.01) return null;
+                return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3]), Math.min(1.0, a)];
+              }
+              function sampleAt(x, y) {
+                var el = document.elementFromPoint(x, y) || document.body;
+                var layers = [];
+                while (el && el.nodeType === 1) {
+                  var c = parseRGBA(window.getComputedStyle(el).backgroundColor);
+                  if (c) layers.push(c);
+                  el = el.parentElement;
+                }
+                var rgb = \(baseRGB);
+                for (var i = layers.length - 1; i >= 0; i--) {
+                  var fg = layers[i];
+                  var a = fg[3];
+                  rgb = [
+                    fg[0] * a + rgb[0] * (1 - a),
+                    fg[1] * a + rgb[1] * (1 - a),
+                    fg[2] * a + rgb[2] * (1 - a)
+                  ];
+                }
+                return (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255.0;
+              }
+              var w = Math.max(60, window.innerWidth || 400);
+              var h = Math.max(60, (document.body && document.body.scrollHeight) || 160);
+              var l1 = sampleAt(w * 0.5, Math.min(32, h * 0.25));
+              var l2 = sampleAt(w * 0.5, Math.min(180, h * 0.5));
+              var l3 = sampleAt(w * 0.5, Math.max(32, h - 32));
+              return (l1 + l2 + l3) / 3.0;
+            })();
+            """
+            webView.evaluateJavaScript(js, in: nil, in: .defaultClient) { [weak self] outcome in
+                guard let self, case .success(let value) = outcome else { return }
+                let lum: Double?
+                if let d = value as? Double {
+                    lum = d
+                } else if let n = value as? NSNumber {
+                    lum = n.doubleValue
+                } else {
+                    lum = nil
+                }
+                if let lum, lum.isFinite {
+                    self.onSurfaceModeResolved?(lum >= 0.48 ? .light : .dark)
                 }
             }
         }
@@ -285,7 +356,7 @@ struct MailHTMLWebView: NSViewRepresentable {
 
         // MARK: - HTML Wrapping & Theme Adaptation
 
-        private static func usesHardcodedLightSurface(_ html: String) -> Bool {
+        static func usesHardcodedLightSurface(_ html: String) -> Bool {
             let lower = html.lowercased()
             if lower.contains("prefers-color-scheme") {
                 return false
