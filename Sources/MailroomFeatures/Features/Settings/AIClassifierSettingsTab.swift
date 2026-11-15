@@ -30,7 +30,10 @@ struct AIClassifierSettingsTabView: View {
             }
 
             if s.engineMode != .rules {
-                SettingsSectionBlock(title: "模型连接") {
+                SettingsSectionBlock(
+                    title: "模型连接",
+                    footnote: s.connectionTestError
+                ) {
                     SunkenCardGroup {
                         if s.engineMode == .hybrid {
                             SettingsRowView(title: "服务商") {

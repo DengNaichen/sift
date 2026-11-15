@@ -1,0 +1,195 @@
+{
+  "_metadata": {
+    "dataset": "open-inbox-v1",
+    "annotator": "Gemini 4 Hydrogen (High)",
+    "policy_version": "2026-11-15-sift-v1",
+    "count": 37
+  },
+  "annotations": {
+    "open-01": {
+      "action": "trash",
+      "category": "social",
+      "rationale": "Passive RPM-List community mailing-list thread discussing ALSA RPMs and mixer behavior without personally tasking the mailbox owner."
+    },
+    "open-02": {
+      "action": "archive",
+      "category": "news",
+      "rationale": "Subscribed CNET News.com Daily Dispatch editorial tech and business news newsletter."
+    },
+    "open-03": {
+      "action": "trash",
+      "category": "social",
+      "rationale": "Passive [ILUG] public mailing-list post asking the community for Linux routing HOWTO pointers, not a direct task for the owner."
+    },
+    "open-04": {
+      "action": "keep",
+      "category": "respond",
+      "rationale": "Direct Vercel team invitation from bukinoshita asking the owner to accept and join the Enigma team."
+    },
+    "open-05": {
+      "action": "archive",
+      "category": "news",
+      "rationale": "Subscribed weekly CodePen Challenge developer digest featuring ideas and frontend resources."
+    },
+    "open-06": {
+      "action": "keep",
+      "category": "security",
+      "rationale": "Standalone GitHub account security alert notifying the owner that a new personal access token was added."
+    },
+    "open-07": {
+      "action": "trash",
+      "category": "social",
+      "rationale": "Passive RPM-List public mailing-list message discussing sylpheed-claws RPM packaging without personally tasking the owner."
+    },
+    "open-08": {
+      "action": "archive",
+      "category": "fyi",
+      "rationale": "Owner-specific dental appointment confirmation record requiring no reply or immediate action."
+    },
+    "open-09": {
+      "action": "trash",
+      "category": "social",
+      "rationale": "Passive Exmh-users public mailing-list discussion about cut-and-paste behavior in exmh and gvim."
+    },
+    "open-10": {
+      "action": "trash",
+      "category": "marketing",
+      "rationale": "Pure consumer retail Summer Sale promotional flyer with discount offers and no owner-specific transaction or editorial content."
+    },
+    "open-11": {
+      "action": "archive",
+      "category": "news",
+      "rationale": "Subscribed Wrox Press Developer's Journal newsletter issue with programming articles, interviews, and catalog updates."
+    },
+    "open-12": {
+      "action": "trash",
+      "category": "marketing",
+      "rationale": "CNET Shopper consumer retail electronics deal alert promoting product prices and rebates without editorial news."
+    },
+    "open-13": {
+      "action": "archive",
+      "category": "fyi",
+      "rationale": "Developer service announcement clarifying Google Play Target API Level policy exceptions and extending deadlines with no immediate action required."
+    },
+    "open-14": {
+      "action": "keep",
+      "category": "security",
+      "rationale": "Standalone Yelp sign-in security alert reporting recent login time, device, location, and IP address."
+    },
+    "open-15": {
+      "action": "review",
+      "category": "review",
+      "rationale": "Has an unread attachment (has_attachments is true) containing the referenced patch, so full substance cannot be verified without opening it."
+    },
+    "open-16": {
+      "action": "keep",
+      "category": "security",
+      "rationale": "Standalone AWS one-time email verification code for account authentication."
+    },
+    "open-17": {
+      "action": "keep",
+      "category": "respond",
+      "rationale": "Urgent internal request requiring the owner's authorization for a $245,000 vendor wire transfer by 3PM today."
+    },
+    "open-18": {
+      "action": "keep",
+      "category": "respond",
+      "rationale": "Active Software Engineer interview schedule notice explicitly requesting confirmation by reply."
+    },
+    "open-19": {
+      "action": "keep",
+      "category": "respond",
+      "rationale": "Unpaid invoice #123456 reminder due in 3 days to prevent service disruption."
+    },
+    "open-20": {
+      "action": "keep",
+      "category": "security",
+      "rationale": "Standalone Dropbox account security alert reporting a password reset request."
+    },
+    "open-21": {
+      "action": "archive",
+      "category": "fyi",
+      "rationale": "Owner-specific Nike order shipment confirmation with tracking number and delivery details needing no reply."
+    },
+    "open-22": {
+      "action": "review",
+      "category": "review",
+      "rationale": "Flagged body_is_image_only as true with only generic click-here text and no readable offer substance."
+    },
+    "open-23": {
+      "action": "keep",
+      "category": "respond",
+      "rationale": "Direct personal message from Cousin Rachel requesting the owner's availability for family reunion dates."
+    },
+    "open-24": {
+      "action": "trash",
+      "category": "pitch",
+      "rationale": "Unsolicited cold B2B telecom vendor pitch promoting conference call rates and requesting business lead information."
+    },
+    "open-25": {
+      "action": "archive",
+      "category": "fyi",
+      "rationale": "Paid Apple App Store subscription receipt for HBO Max, remaining an owner-specific financial record despite the Apple Card upsell banner."
+    },
+    "open-26": {
+      "action": "archive",
+      "category": "news",
+      "rationale": "Subscribed daily tech headlines newsletter from The Register with editorial story summaries."
+    },
+    "open-27": {
+      "action": "keep",
+      "category": "security",
+      "rationale": "Standalone Linear one-time login verification code and magic link."
+    },
+    "open-28": {
+      "action": "trash",
+      "category": "pitch",
+      "rationale": "Automated mass job-fair promotional blast from jobfair24 with no prior relationship or active candidacy."
+    },
+    "open-29": {
+      "action": "trash",
+      "category": "pitch",
+      "rationale": "Unsolicited cold B2B vendor pitch offering search-engine website promotion services."
+    },
+    "open-30": {
+      "action": "review",
+      "category": "review",
+      "rationale": "Flagged body_is_image_only as true and contains only an unsubscribe boilerplate stub without the unloaded image content."
+    },
+    "open-31": {
+      "action": "trash",
+      "category": "marketing",
+      "rationale": "Pure consumer commercial advertisement promoting at-home teeth whitening products."
+    },
+    "open-32": {
+      "action": "archive",
+      "category": "fyi",
+      "rationale": "Monthly SourceForge Mailman membership record containing the owner's subscribed list URL and settings instructions."
+    },
+    "open-33": {
+      "action": "trash",
+      "category": "pitch",
+      "rationale": "Unsolicited cold B2B sales pitch offering business web hosting packages."
+    },
+    "open-34": {
+      "action": "archive",
+      "category": "fyi",
+      "rationale": "Owner-specific flight booking confirmation record with flight number and departure times needing no reply."
+    },
+    "open-35": {
+      "action": "trash",
+      "category": "marketing",
+      "rationale": "Standalone promotional travel insurance advertisement with no existing booking or personal transaction."
+    },
+    "open-36": {
+      "action": "keep",
+      "category": "respond",
+      "rationale": "Urgent production system outage escalation from an enterprise client requiring immediate engineering response."
+    },
+    "open-37": {
+      "action": "archive",
+      "category": "news",
+      "rationale": "Subscribed CNET Virus & Security editorial newsletter covering general malware worms and an Outlook PGP flaw unrelated to the owner's account."
+    }
+  }
+}

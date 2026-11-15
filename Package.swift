@@ -15,6 +15,9 @@ let package = Package(
     targets: [
         .target(
             name: "MailroomCore",
+            resources: [
+                .process("Resources")
+            ],
             linkerSettings: [
                 .linkedLibrary("sqlite3"),
                 .linkedLibrary("iconv")

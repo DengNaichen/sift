@@ -16,8 +16,32 @@ public final class AppModel {
         self.environment = environment
         self.preferences = PreferencesStore(defaults: environment.defaults, systemIsDark: environment.systemIsDark)
         self.shell = ShellState()
-        self.settingsForm = SettingsFormState()
-        self.deck = DeckStore(environment: environment)
+        let form = SettingsFormState(
+            defaults: environment.defaults,
+            secretStore: environment.secretStore,
+            initialCacheSizeText: environment.classifierCacheSizeText(),
+            testAIConnection: environment.testAIConnection
+        )
+        self.settingsForm = form
+        let deckStore = DeckStore(
+            environment: environment,
+            initialClassifierConfiguration: form.classifierConfiguration
+        )
+        self.deck = deckStore
+
+        form.onClassifierConfigurationChanged = { [weak deckStore] config in
+            deckStore?.updateClassifierConfiguration(config)
+        }
+        form.onLiveBridgeSettingsChanged = { [weak deckStore] in
+            deckStore?.refreshLiveAdapterForBridgeSettingsChange()
+        }
+        form.onRebuildCaches = { [weak deckStore] in
+            guard let deckStore else { return environment.classifierCacheSizeText() }
+            return try await deckStore.rebuildCaches()
+        }
+        form.onQueryCacheSizeText = {
+            environment.classifierCacheSizeText()
+        }
     }
 
     // MARK: - Command execution
@@ -124,6 +148,9 @@ public final class AppModel {
             settingsForm.activeSection = section
         }
         settingsForm.syncAccountsIfNeeded(from: deck.accounts)
+        if settingsForm.activeSection == .diagnostics {
+            settingsForm.refreshDiagnostics(silent: true)
+        }
         shell.sidebarPeeking = false
         environment.animate(0.18) {
             shell.settingsOpen = true

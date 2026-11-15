@@ -36,7 +36,7 @@ struct ReadingPaneViewModel {
 
     func body(for content: MailContent) -> Body {
         if let html = content.htmlBody, !html.isEmpty, !app.preferences.preferPlainText {
-            let allowed = deck.allowedRemoteImageIds.contains(content.id)
+            let allowed = app.settingsForm.remoteImageChoice == .alwaysLoad || deck.allowedRemoteImageIds.contains(content.id)
             return .html(html, allowRemoteImages: allowed, showsPrivacyBar: content.hasRemoteImages && !allowed)
         }
         return .plain(content.plainText)
